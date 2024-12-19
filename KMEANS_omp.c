@@ -327,66 +327,75 @@ int main(int argc, char* argv[])
  */
 
 	do{
-		it++;
+		it++; //# di iterazioni
 	
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
-		changes = 0;
-		for(i=0; i<lines; i++)
-		{
-			class=1;
-			minDist=FLT_MAX;
-			for(j=0; j<K; j++)
-			{
-				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples);
+		changes = 0; 					//# di cambiamenti per ogni iterazione
+		for(i=0; i<lines; i++){ 		//gira tutti i punti
+			class=1;					//valore di default
+			minDist=FLT_MAX; 			//valore di default 
 
-				if(dist < minDist)
-				{
-					minDist=dist;
-					class=j+1;
+			for(j=0; j<K; j++){ 		//calcola la distanza dal punto del primo for (i) al centroide j
+				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples); //samples = numero di coordinate per ogni punto
+
+				if(dist < minDist){		//se trova una distanza più corta della minima istanziata all'inizio salva 
+					minDist=dist; 		//switch di valori classico
+					class=j+1; 			//assegnazione al centroide più vicino al punto
 				}
 			}
-			if(classMap[i]!=class)
-			{
-				changes++;
+			//classMap = numero di linee totali e per ogni punto ti dice il centroide più vicino 
+			if(classMap[i] != class){ 	//se il centroide più vicino non è più lo stesso di quello all'iterazione prima (nel caso della prima non entra)
+				changes++; 		      	//aggiorno il numero di cambiamenti in un iterazione di doWHILE
 			}
-			classMap[i]=class;
+			classMap[i]=class;		  	//nel dubbio assegna sicuro ad una classe (centroide)
 		}
 
 		// 2. Recalculates the centroids: calculates the mean within each cluster
-		zeroIntArray(pointsPerClass,K);
-		zeroFloatMatriz(auxCentroids,K,samples);
+		zeroIntArray(pointsPerClass,K);  		 //creazione array di soli zeri di grandezza K
+		zeroFloatMatriz(auxCentroids,K,samples); //creazione una matrice e la mette tutta a zero (float)
 
-		for(i=0; i<lines; i++) 
-		{
-			class=classMap[i];
-			pointsPerClass[class-1] = pointsPerClass[class-1] +1;
+		//scorre tutti i punti (i)
+		for(i=0; i<lines; i++) {
+			class=classMap[i]; 									  //per ogni punto prende il centroide più vicino
+			pointsPerClass[class-1] = pointsPerClass[class-1] +1; //quanti punti appartengono a un centroide
+			
+			//scorre i valori delle coordinate del punto i (colonne)
 			for(j=0; j<samples; j++){
-				auxCentroids[(class-1)*samples+j] += data[i*samples+j];
-			}
+				//aggiungo per ogni "punto" (linea) appartenente al centroide [class-1] le sue cordinate (colonne) nella matrice di appoggio sommandole ai valori già sommati
+				auxCentroids[(class-1)*samples+j] += data[i*samples+j]; 
+			} 
 		}
 
-		for(i=0; i<K; i++) 
-		{
+		//per ogni centroide (#cluster = #centroide) distanza media dei punti da un centroide i
+		for(i=0; i<K; i++) {
 			for(j=0; j<samples; j++){
-				auxCentroids[i*samples+j] /= pointsPerClass[i];
+				//divido ogni somma di valori (colonna di linee) per il numero di punti appartenenti al centroide (per il numero di volte che sono state sommate)
+				auxCentroids[i*samples+j] /= pointsPerClass[i]; 
 			}
 		}
 		
-		maxDist=FLT_MIN;
+		maxDist=FLT_MIN; //distanza max = minimo numero float
+		//per ogni centroide (#cluster = #centroide)
 		for(i=0; i<K; i++){
+			//distanza tra il centroide dell'ultima iterazione (del do while) e quello di questa
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
-			if(distCentroids[i]>maxDist) {
-				maxDist=distCentroids[i];
+			
+			if(distCentroids[i]>maxDist) { //nel caso in cui troviamo una distanza superiore alla max 
+				maxDist=distCentroids[i];  //allora classico switch di valori
 			}
 		}
-		memcpy(centroids, auxCentroids, (K*samples*sizeof(float)));
+		memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
 		
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
 
 	} while((changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
-
+	//usciamo se: 
+	// - #MAX cambiamenti avvenuti nell'ultima iterazione supera il numero in argval
+	// - abbiamo superato il numero di iterazioni massime argval
+	// - se la distanza massima tra un centroide e lo stesso della vecchia iterazione supera il threshold settato in argval
+	
 /*
  *
  * STOP HERE: DO NOT CHANGE THE CODE BELOW THIS POINT
