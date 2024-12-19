@@ -338,12 +338,12 @@ int main(int argc, char* argv[])
 			per via della divisione dei punti, ma dovrà essere condivisa per via dell'uso poi successivo
 			nel caso in cui abbiamo 100 linee e 100 centroidi sarebbero 10.000 iterazioni
 		*/
-		changes = 0; 					//# di cambiamenti per ogni iterazione
+		changes = 0; 	
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) 	//# di cambiamenti per ogni iterazione
 		for(i=0; i<lines; i++){ 		//gira tutti i punti
 			class=1;					//valore di default
 			minDist=FLT_MAX; 			//valore di default 
-			
-			/*
+						/*
 				TODO: aggiungere al file della relazione 
 				andare a parallelizzare questa parte non sarebbe utile perché andrebbe a creare troppi thread per ogni punto (linea) 
 				e distruggerli durano poco rispetto a quelli esterni
@@ -362,12 +362,12 @@ int main(int argc, char* argv[])
 			}
 			classMap[i]=class;		  	//nel dubbio assegna sicuro ad una classe (centroide)
 		}
-
 		// 2. Recalculates the centroids: calculates the mean within each cluster
 		zeroIntArray(pointsPerClass,K);  		 //creazione array di soli zeri di grandezza K
 		zeroFloatMatriz(auxCentroids,K,samples); //creazione una matrice e la mette tutta a zero (float)
 
 		//scorre tutti i punti (i) 
+		//#pragma omp parallel for private(i,class) shared(pointsPerClass,auxCentroids)
 		/*
 			centroidi <= punti (righe)
 			100*#colonne (coordinate)
@@ -393,6 +393,7 @@ int main(int argc, char* argv[])
 		
 		maxDist=FLT_MIN; //distanza max = minimo numero float
 		//per ogni centroide (#cluster = #centroide)
+		
 		for(i=0; i<K; i++){
 			//distanza tra il centroide dell'ultima iterazione (del do while) e quello di questa
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
@@ -404,7 +405,7 @@ int main(int argc, char* argv[])
 		memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
 		
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-		outputMsg = strcat(outputMsg,line);
+		outputMsg = strcat(outputMsg,line); 
 
 	} while((changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
 	//usciamo se: 
