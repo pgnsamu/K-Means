@@ -331,11 +331,23 @@ int main(int argc, char* argv[])
 	
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
+		/*
+			TODO: aggiungere al file della relazione 
+			è stato parallelizzato utilizzando private sulle variabili che non dipendono dalle iterazioni precedenti/successive
+			ma invece condividendo l'array dove verranno salvati i centroidi essendo che ogni utilizzo di questo non potrà essere concorrente 
+			per via della divisione dei punti, ma dovrà essere condivisa per via dell'uso poi successivo
+			nel caso in cui abbiamo 100 linee e 100 centroidi sarebbero 10.000 iterazioni
+		*/
 		changes = 0; 					//# di cambiamenti per ogni iterazione
 		for(i=0; i<lines; i++){ 		//gira tutti i punti
 			class=1;					//valore di default
 			minDist=FLT_MAX; 			//valore di default 
-
+			
+			/*
+				TODO: aggiungere al file della relazione 
+				andare a parallelizzare questa parte non sarebbe utile perché andrebbe a creare troppi thread per ogni punto (linea) 
+				e distruggerli durano poco rispetto a quelli esterni
+			*/
 			for(j=0; j<K; j++){ 		//calcola la distanza dal punto del primo for (i) al centroide j
 				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples); //samples = numero di coordinate per ogni punto
 
@@ -355,10 +367,14 @@ int main(int argc, char* argv[])
 		zeroIntArray(pointsPerClass,K);  		 //creazione array di soli zeri di grandezza K
 		zeroFloatMatriz(auxCentroids,K,samples); //creazione una matrice e la mette tutta a zero (float)
 
-		//scorre tutti i punti (i)
+		//scorre tutti i punti (i) 
+		/*
+			centroidi <= punti (righe)
+			100*#colonne (coordinate)
+		*/
 		for(i=0; i<lines; i++) {
-			class=classMap[i]; 									  //per ogni punto prende il centroide più vicino
-			pointsPerClass[class-1] = pointsPerClass[class-1] +1; //quanti punti appartengono a un centroide
+			class=classMap[i]; 				//per ogni punto prende il centroide più vicino
+			pointsPerClass[class-1] += 1; 	//quanti punti appartengono a un centroide
 			
 			//scorre i valori delle coordinate del punto i (colonne)
 			for(j=0; j<samples; j++){
