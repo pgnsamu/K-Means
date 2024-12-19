@@ -331,11 +331,11 @@ int main(int argc, char* argv[])
 	
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
-		changes = 0; 					//# di cambiamenti per ogni iterazione
+		changes = 0; 	
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) 	//# di cambiamenti per ogni iterazione
 		for(i=0; i<lines; i++){ 		//gira tutti i punti
 			class=1;					//valore di default
 			minDist=FLT_MAX; 			//valore di default 
-
 			for(j=0; j<K; j++){ 		//calcola la distanza dal punto del primo for (i) al centroide j
 				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples); //samples = numero di coordinate per ogni punto
 
@@ -350,12 +350,12 @@ int main(int argc, char* argv[])
 			}
 			classMap[i]=class;		  	//nel dubbio assegna sicuro ad una classe (centroide)
 		}
-
 		// 2. Recalculates the centroids: calculates the mean within each cluster
 		zeroIntArray(pointsPerClass,K);  		 //creazione array di soli zeri di grandezza K
 		zeroFloatMatriz(auxCentroids,K,samples); //creazione una matrice e la mette tutta a zero (float)
 
 		//scorre tutti i punti (i)
+		//#pragma omp parallel for private(i,class) shared(pointsPerClass,auxCentroids)
 		for(i=0; i<lines; i++) {
 			class=classMap[i]; 									  //per ogni punto prende il centroide più vicino
 			pointsPerClass[class-1] = pointsPerClass[class-1] +1; //quanti punti appartengono a un centroide
@@ -377,6 +377,7 @@ int main(int argc, char* argv[])
 		
 		maxDist=FLT_MIN; //distanza max = minimo numero float
 		//per ogni centroide (#cluster = #centroide)
+		
 		for(i=0; i<K; i++){
 			//distanza tra il centroide dell'ultima iterazione (del do while) e quello di questa
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
@@ -388,7 +389,7 @@ int main(int argc, char* argv[])
 		memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
 		
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-		outputMsg = strcat(outputMsg,line);
+		outputMsg = strcat(outputMsg,line); 
 
 	} while((changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
 	//usciamo se: 

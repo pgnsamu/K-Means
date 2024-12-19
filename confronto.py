@@ -19,12 +19,13 @@ def confronta_file(file1, file2):
                     print(f"Riga {i+1} diversa:")
                     print(f"File1: {linee1[i].strip()}")
                     print(f"File2: {linee2[i].strip()}")
+                    return
     except FileNotFoundError:
         print(f"Uno dei file non esiste. Controlla i percorsi forniti.")
     except Exception as e:
         print(f"Si è verificato un errore: {e}")
 
 # Esegui la funzione con i percorsi dei tuoi file
-file1 = "file1.txt"
-file2 = "file2.txt"
+file1 = "output2D.inp"
+file2 = "output2D2.inp"
 confronta_file(file1, file2)
