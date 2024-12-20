@@ -14,12 +14,13 @@ def confronta_file(file1, file2):
             # Confronta ogni riga dei due file
             for i in range(len(linee1)):
                 if linee1[i] == linee2[i]:
-                    print(f"Riga {i+1} uguale: {linee1[i].strip()}")
+                    continue
                 else:
                     print(f"Riga {i+1} diversa:")
                     print(f"File1: {linee1[i].strip()}")
                     print(f"File2: {linee2[i].strip()}")
                     return
+            print("I file sono uguali")
     except FileNotFoundError:
         print(f"Uno dei file non esiste. Controlla i percorsi forniti.")
     except Exception as e:
