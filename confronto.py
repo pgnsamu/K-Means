@@ -10,7 +10,7 @@ def confronta_file(file1, file2):
             if len(linee1) != len(linee2):
                 print(f"I file hanno un numero di righe diverso: {len(linee1)} vs {len(linee2)}")
                 return
-
+            count = 0
             # Confronta ogni riga dei due file
             for i in range(len(linee1)):
                 if linee1[i] == linee2[i]:
