@@ -339,7 +339,8 @@ int main(int argc, char* argv[])
 			nel caso in cui abbiamo 100 linee e 100 centroidi sarebbero 10.000 iterazioni
 		*/
 		changes = 0; 	
-		#pragma omp parallel for private(i,class,minDist) shared(classMap) 	//# di cambiamenti per ogni iterazione
+		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes)  //# di cambiamenti per ogni iterazione
 		for(i=0; i<lines; i++){ 		//gira tutti i punti
 			class=1;					//valore di default
 			minDist=FLT_MAX; 			//valore di default 
@@ -356,7 +357,7 @@ int main(int argc, char* argv[])
 					class=j+1; 			//assegnazione al centroide più vicino al punto
 				}
 			}
-			//classMap = numero di linee totali e per ogni punto ti dice il centroide più vicino 
+			//classMap = grande quanto il numero di linee totali e per ogni linea ti dice il centroide più vicino 
 			if(classMap[i] != class){ 	//se il centroide più vicino non è più lo stesso di quello all'iterazione prima (nel caso della prima non entra)
 				#pragma omp atomic
 				changes++; 		      	//aggiorno il numero di cambiamenti in un iterazione di doWHILE
@@ -373,9 +374,10 @@ int main(int argc, char* argv[])
 			centroidi <= punti (righe)
 			100*#colonne (coordinate)
 		*/
+		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
 		#pragma omp parallel for private(i,class,j) reduction(+:pointsPerClass[:K]) reduction(+:auxCentroids[:K*samples])
 		for(i=0; i<lines; i++) {
-			class=classMap[i]; 			//per ogni punto prende il centroide più vicino
+			class=classMap[i]; 			//per ogni punto prende il centroide più vicino 
 			pointsPerClass[class-1] += 1; 	//quanti punti appartengono a un centroide
 			
 			//scorre i valori delle coordinate del punto i (colonne)
@@ -384,7 +386,7 @@ int main(int argc, char* argv[])
 				auxCentroids[(class-1)*samples+j] += data[i*samples+j]; 
 			} 
 		}
-
+		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
 		//per ogni centroide (#cluster = #centroide) distanza media dei punti da un centroide i
 		#pragma omp parallel for private(i,j) shared(auxCentroids,pointsPerClass)
 		for(i=0; i<K; i++) {
@@ -396,6 +398,7 @@ int main(int argc, char* argv[])
 		
 		maxDist=FLT_MIN; //distanza max = minimo numero float
 		//per ogni centroide (#cluster = #centroide)
+		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
 		#pragma omp parallel for shared(maxDist)
 		for(i=0; i<K; i++){
 			//distanza tra il centroide dell'ultima iterazione (del do while) e quello di questa
