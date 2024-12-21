@@ -328,14 +328,20 @@ int main(int argc, char* argv[])
  * START HERE: DO NOT CHANGE THE CODE ABOVE THIS POINT
  *
  */
-
+	int size = 4;
+	int centroidPerProcess = K/size;	//numero di centroidi per processo
+	int linesPerProcess = lines/size;	//numero di linee per processo
+	int *pointsPerClassLocal = (int*)calloc(K,sizeof(int));
+	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
+	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
 	do{
 		it++;
-	
+		
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
 		changes = 0;
-		for(i=0; i<lines; i++)
+		int changesLocal = 0;
+		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++)
 		{
 			class=1;
 			minDist=FLT_MAX;
@@ -349,46 +355,66 @@ int main(int argc, char* argv[])
 					class=j+1;
 				}
 			}
-			if(classMap[i]!=class)
+			if(classMaplocal[i]!=class)
 			{
-				changes++;
+				changesLocal++;
 			}
-			classMap[i]=class;
+			classMaplocal[i]=class;
+		}
+		MPI_Reduce(&changesLocal, &changes, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Barrier(MPI_COMM_WORLD);
+		// Teoricamente conviene lasciare per il momento classMaplocal e non usare MPI_ALLGATHER
+		// Problema principale: indici del for vanno in index out of range
+		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, lines,MPI_INT,MPI_COMM_WORLD);
+
+		if(rank == 0){
+			zeroIntArray(pointsPerClass,K);
+			zeroFloatMatriz(auxCentroids,K,samples);
 		}
 
 		// 2. Recalculates the centroids: calculates the mean within each cluster
-		zeroIntArray(pointsPerClass,K);
-		zeroFloatMatriz(auxCentroids,K,samples);
 
-		for(i=0; i<lines; i++) 
+	
+		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++) 
 		{
 			class=classMap[i];
-			pointsPerClass[class-1] = pointsPerClass[class-1] +1;
+			pointsPerClassLocal[class-1] += 1;
 			for(j=0; j<samples; j++){
-				auxCentroids[(class-1)*samples+j] += data[i*samples+j];
+				auxCentroidsLocal[(class-1)*samples+j] += data[i*samples+j];
 			}
 		}
 
-		for(i=0; i<K; i++) 
+		MPI_Allreduce(&pointsPerClassLocal, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		MPI_Allreduce(&auxCentroidsLocal, auxCentroids, K*samples, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+
+		for(i=rank*centroidPerProcess; i<(rank+1)*centroidPerProcess; i++) 
 		{
 			for(j=0; j<samples; j++){
 				auxCentroids[i*samples+j] /= pointsPerClass[i];
 			}
 		}
+	
 		
 		maxDist=FLT_MIN;
-		for(i=0; i<K; i++){
+		float maxDistLocal = FLT_MIN;
+		for(i=rank*centroidPerProcess; i<(rank+1)*centroidPerProcess; i++){
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
-			if(distCentroids[i]>maxDist) {
-				maxDist=distCentroids[i];
+			if(distCentroids[i]>maxDistLocal) {
+				maxDistLocal=distCentroids[i];
 			}
 		}
-		memcpy(centroids, auxCentroids, (K*samples*sizeof(float)));
-		
-		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-		outputMsg = strcat(outputMsg,line);
+		MPI_Reduce(&maxDistLocal, &maxDist, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD);
+		if(rank == 0){
+			memcpy(centroids, auxCentroids, (K*samples*sizeof(float)));
+			sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
+			outputMsg = strcat(outputMsg,line);
+		}
 
-	} while((changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
+	} while((rank == 0) && (changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
+	free(pointsPerClassLocal);
+	free(auxCentroidsLocal);
+	free(classMaplocal);
+	MPI_Finalize();
 
 /*
  *
