@@ -344,10 +344,6 @@ int main(int argc, char* argv[])
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
 		changes = 0;
-		for(int y=0;y<linesPerProcess;y++)
-		{
-			classMaplocal[y] = 0;
-		}
 		int changesLocal = 0;
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++)
 		{
@@ -374,7 +370,8 @@ int main(int argc, char* argv[])
 		MPI_Barrier(MPI_COMM_WORLD);
 		// Teoricamente conviene lasciare per il momento classMaplocal e non usare MPI_ALLGATHER
 		// Problema principale: indici del for vanno in index out of range
-		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
+		MPI_Gather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(classMap, lines, MPI_INT, 0, MPI_COMM_WORLD);
 		if(rank == 0){
 			for(int b=0;b<20;b++)
 			{
@@ -397,8 +394,10 @@ int main(int argc, char* argv[])
 			}
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Allreduce(pointsPerClassLocal, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-		MPI_Allreduce(auxCentroidsLocal, auxCentroids, K*samples, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+		MPI_Reduce(pointsPerClassLocal, pointsPerClass, K, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Bcast(pointsPerClass, K, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Reduce(auxCentroidsLocal, auxCentroids, K*samples, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Bcast(auxCentroids, K*samples, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
 		for(i=rank*centroidPerProcess; i<(rank+1)*centroidPerProcess; i++) 
 		{
@@ -419,12 +418,11 @@ int main(int argc, char* argv[])
 		MPI_Barrier(MPI_COMM_WORLD);
 		MPI_Reduce(&maxDistLocal, &maxDist, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD);
 
+
 		if(rank == 0){
-			memcpy(centroids, auxCentroids, (K*samples*sizeof(float)));
+			memcpy(centroids, auxCentroids, K*samples*sizeof(float));
 			sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 			outputMsg = strcat(outputMsg,line);
-		}
-		if(rank == 0) {
 			global_continue = (changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold);
 		}
 		MPI_Bcast(&global_continue, 1, MPI_INT, 0, MPI_COMM_WORLD);
