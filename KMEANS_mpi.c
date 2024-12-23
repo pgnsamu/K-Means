@@ -328,9 +328,6 @@ int main(int argc, char* argv[])
  * START HERE: DO NOT CHANGE THE CODE ABOVE THIS POINT
  *
  */
-	// DA SISTEMARE: 
-	// 1. Size
-	// 2. Risultati non corrispondenti a quelli attesi (sequenziale e omp)
 	int size;
 	MPI_Comm_size(MPI_COMM_WORLD, &size);   // Get total number of processes
 	int centroidPerProcess = K/size;	//numero di centroidi per processo
