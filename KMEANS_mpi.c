@@ -385,7 +385,6 @@ int main(int argc, char* argv[])
 
 
 		if(rank == 0){
-			printf("changes: %d\n", changes);
 			zeroIntArray(pointsPerClass,K);
 			zeroFloatMatriz(auxCentroids,K,samples);
 		}

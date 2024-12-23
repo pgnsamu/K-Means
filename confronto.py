@@ -27,6 +27,6 @@ def confronta_file(file1, file2):
         print(f"Si è verificato un errore: {e}")
 
 # Esegui la funzione con i percorsi dei tuoi file
-file1 = "output2D.inp"
-file2 = "output2D2.inp"
+file1 = "/home/alex/progetto_embedded/K-Means/output2D.inp"
+file2 = "/home/alex/progetto_embedded/K-Means/output2D2.inp"
 confronta_file(file1, file2)
