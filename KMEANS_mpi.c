@@ -331,7 +331,8 @@ int main(int argc, char* argv[])
 	// DA SISTEMARE: 
 	// 1. Size
 	// 2. Risultati non corrispondenti a quelli attesi (sequenziale e omp)
-	int size = 4;
+	int size;
+	MPI_Comm_size(MPI_COMM_WORLD, &size);   // Get total number of processes
 	int centroidPerProcess = K/size;	//numero di centroidi per processo
 	int linesPerProcess = lines/size;	//numero di linee per processo
 	int *pointsPerClassLocal = (int*)calloc(K,sizeof(int));
@@ -349,22 +350,17 @@ int main(int argc, char* argv[])
 			classMaplocal[y] = 0;
 		}
 		int changesLocal = 0;
-		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++)
-		{
+		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++){
 			class=1;
 			minDist=FLT_MAX;
-			for(j=0; j<K; j++)
-			{
+			for(j=0; j<K; j++){
 				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples);
-
-				if(dist < minDist)
-				{
+				if(dist < minDist){
 					minDist=dist;
 					class=j+1;
 				}
 			}
-			if(classMaplocal[i-rank*linesPerProcess]!=class)
-			{
+			if(classMap[i]!=class){
 				changesLocal++;
 			}
 			classMaplocal[i-rank*linesPerProcess]=class;
@@ -376,10 +372,11 @@ int main(int argc, char* argv[])
 		// Problema principale: indici del for vanno in index out of range
 		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 		if(rank == 0){
-			for(int b=0;b<20;b++)
-			{
+			/*
+			for(int b=0;b<20;b++){
 				printf("%d ",classMap[b]);
 			}
+			*/
 			zeroIntArray(pointsPerClass,K);
 			zeroFloatMatriz(auxCentroids,K,samples);
 		}
