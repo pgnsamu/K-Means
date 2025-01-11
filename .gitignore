@@ -2,3 +2,5 @@
 !.gitignore
 debugfiles
 tmp
+Makefile
+output*.inp
