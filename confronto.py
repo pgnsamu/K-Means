@@ -3,14 +3,14 @@ import time
 import os
 
 def esegui_programma_mpi(comando):
-    """Esegue un programma MPI e restituisce True se eseguito con successo."""
+    """Esegue un programma MPI e cattura l'output."""
     try:
-        subprocess.run(comando, shell=True, check=True)
-        return True
+        risultato = subprocess.run(comando, shell=True, capture_output=True, text=True, check=True)
+        return risultato.stdout  # Restituisce l'output del programma
     except subprocess.CalledProcessError as e:
         print(f"Errore durante l'esecuzione del comando: {comando}")
-        print(e)
-        return False
+        print(e.stderr)
+        return None
 
 def confronta_file(file1, file2):
     """Confronta due file riga per riga e restituisce True se sono uguali."""
@@ -41,27 +41,28 @@ def confronta_file(file1, file2):
         return False
 
 # Configurazioni
-num_esecuzioni = 3
+num_esecuzioni = 10
 file_riferimento = "/home/alex/progetto_embedded/K-Means/output2D.inp"
 file_generato = "/home/alex/progetto_embedded/K-Means/output2D2.inp"
-comando_mpi = "mpirun -np 4 ./KMEANS_mpi test_files/input100D2.inp 1000 3 45 0.01 output2D.inp"
+comando_mpi = "./KMEANS_omp test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
 
 # File di log per i tempi di esecuzione
 file_tempi = "tempi_esecuzione.txt"
 
-# Esegui il programma 100 volte e confronta i file
+# Esegui il programma num_esecuzioni volte e confronta i file
 tempi_esecuzione = []
 differenze_trovate = False
 
 with open(file_tempi, "w") as file_log:
-    file_log.write("Esecuzione,Tempo (secondi),Confronto\n")
+    file_log.write("Esecuzione,Tempo (secondi),Confronto,Output\n")
     
     for i in range(num_esecuzioni):
         print(f"\nEsecuzione {i+1}/{num_esecuzioni}...")
         start_time = time.time()
         
-        # Esegui il programma MPI
-        if not esegui_programma_mpi(comando_mpi):
+        # Esegui il programma MPI e cattura l'output
+        output_programma = esegui_programma_mpi(comando_mpi)
+        if output_programma is None:
             print(f"Errore nell'esecuzione del programma MPI alla iterazione {i+1}.")
             break
         
@@ -79,8 +80,8 @@ with open(file_tempi, "w") as file_log:
             print(f"File diversi alla iterazione {i+1}.")
             # Se desideri fermarti al primo errore, usa: break
         
-        # Scrivi i risultati nel log
-        file_log.write(f"{i+1},{tempo_esecuzione:.4f},{confronto}\n")
+        # Scrivi i risultati nel log, incluso l'output del programma C
+        file_log.write(f"{i+1},{tempo_esecuzione:.4f},{confronto},\"{output_programma.strip()}\"\n")
         
     if not differenze_trovate:
         print("\nTutte le esecuzioni completate senza differenze nei file.")
@@ -91,4 +92,3 @@ with open(file_tempi, "w") as file_log:
 media_tempo = sum(tempi_esecuzione) / len(tempi_esecuzione) if tempi_esecuzione else 0
 print(f"\nStatistiche dei tempi di esecuzione:")
 print(f"Tempo medio: {media_tempo:.4f} secondi")
-
