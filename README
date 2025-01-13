@@ -66,6 +66,11 @@ MPI+OMP
 mpicc -fopenmp -o KMEANS_mpi_omp KMEANS_mpi_omp.c -lm
 ```
 
+Unlimited Test
+```bash
+ulimit -s unlimited
+```
+
 
 If you wanna run the program with debug variables you can do
 ```bash
