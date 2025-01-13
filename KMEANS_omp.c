@@ -157,6 +157,7 @@ void initCentroids(const float *data, float* centroids, int* centroidPos, int sa
 {
 	int i;
 	int idx;
+	#pragma omp parallel for private(i,idx) shared(data,centroids)
 	for(i=0; i<K; i++)
 	{
 		idx = centroidPos[i];
@@ -340,7 +341,8 @@ int main(int argc, char* argv[])
 		*/
 		changes = 0; 	
 		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
-		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes)  //# di cambiamenti per ogni iterazione
+		// si potrebbe fare reduce
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes)  //# di cambiamenti per ogni iterazione 
 		for(i=0; i<lines; i++){ 		//gira tutti i punti
 			class=1;					//valore di default
 			minDist=FLT_MAX; 			//valore di default 
@@ -374,14 +376,18 @@ int main(int argc, char* argv[])
 			centroidi <= punti (righe)
 			100*#colonne (coordinate)
 		*/
+		//TODO: aggiungere alla relazione che con reduction #pragma omp parallel for private(i,class,j) reduction(+:pointsPerClass[:K]) reduction(+:auxCentroids[:K*samples]) andava in segmentation fault
+
 		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
-		#pragma omp parallel for private(i,class,j) reduction(+:pointsPerClass[:K]) reduction(+:auxCentroids[:K*samples])
+		#pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids)
 		for(i=0; i<lines; i++) {
 			class=classMap[i]; 			//per ogni punto prende il centroide più vicino 
+			#pragma omp atomic
 			pointsPerClass[class-1] += 1; 	//quanti punti appartengono a un centroide
 			
 			//scorre i valori delle coordinate del punto i (colonne)
 			for(j=0; j<samples; j++){
+				#pragma omp atomic
 				//aggiungo per ogni "punto" (linea) appartenente al centroide [class-1] le sue cordinate (colonne) nella matrice di appoggio sommandole ai valori già sommati
 				auxCentroids[(class-1)*samples+j] += data[i*samples+j]; 
 			} 
@@ -399,7 +405,7 @@ int main(int argc, char* argv[])
 		maxDist=FLT_MIN; //distanza max = minimo numero float
 		//per ogni centroide (#cluster = #centroide)
 		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
-		#pragma omp parallel for shared(maxDist)
+		#pragma omp parallel for private(i) reduction(max:maxDist)
 		for(i=0; i<K; i++){
 			//distanza tra il centroide dell'ultima iterazione (del do while) e quello di questa
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);

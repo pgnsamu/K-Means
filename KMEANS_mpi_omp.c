@@ -345,6 +345,7 @@ int main(int argc, char* argv[])
 	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
 	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
 	int global_continue;
+	//omp_set_num_threads(8);
 	do{
 		it++;
 		global_continue = 0;
@@ -355,10 +356,11 @@ int main(int argc, char* argv[])
 			classMaplocal[y] = 0;
 		}
 		int changesLocal = 0;
+		#pragma omp parallel for private(i,class,minDist,j) shared(classMap, classMaplocal) reduction(+:changesLocal)
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++){
 			class=1;
 			minDist=FLT_MAX;
-			for(j=0; j<K; j++){
+			for(j=0; j<K; j++){ //TODO: capire se j va messa privata?
 				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples);
 				if(dist < minDist){
 					minDist=dist;
@@ -399,11 +401,13 @@ int main(int argc, char* argv[])
 
 		
 		// 2. Recalculates the centroids: calculates the mean within each cluster
-        //#pragma omp parallel for private(i,class,j) reduction(+:pointsPerClassLocal[:K]) reduction(+:auxCentroidsLocal[:K*samples])
+        #pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids)//non ci sono modifiche significative nel tempo !!!
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++) {
 			class=classMap[i];
+			#pragma omp atomic
 			pointsPerClassLocal[class-1] += 1;
 			for(j=0; j<samples; j++){
+				#pragma omp atomic
 				auxCentroidsLocal[(class-1)*samples+j] += data[i*samples+j];
 			}
 		}
@@ -414,7 +418,7 @@ int main(int argc, char* argv[])
 		int start = rank*centroidPerProcess;
 		int end = (rank+1)*centroidPerProcess;
 
-        //#pragma omp parallel for private(i,j) shared(auxCentroids,pointsPerClass)
+        #pragma omp parallel for private(i,j) shared(auxCentroids)
 		for(i=start; i<end; i++) {
 			for(j=0; j<samples; j++){
 				auxCentroids[i*samples+j] /= pointsPerClass[i];
@@ -423,7 +427,7 @@ int main(int argc, char* argv[])
 		
 		maxDist=FLT_MIN;
 		float maxDistLocal = FLT_MIN;
-        //#pragma omp parallel for shared(maxDistLocal)
+        #pragma omp parallel for private(i) reduction(max:maxDistLocal)
 		for(i=rank*centroidPerProcess; i<(rank+1)*centroidPerProcess; i++){
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
 			if(distCentroids[i]>maxDistLocal) {
