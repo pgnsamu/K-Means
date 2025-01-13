@@ -41,11 +41,11 @@ def confronta_file(file1, file2):
         return False
 
 # Configurazioni
-num_esecuzioni = 10
+num_esecuzioni = 2
 file_riferimento = "./output2D.inp"
 file_generato = "./output2D2.inp"
 comando_omp = "./KMEANS_omp test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
-comando_mpi = "mpirun -np 4 ./KMEANS_mpi test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
+comando_mpi = "mpirun -np 4 ./KMEANS_mpi_omp test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
 
 # File di log per i tempi di esecuzione
 file_tempi = "tempi_esecuzione.txt"
