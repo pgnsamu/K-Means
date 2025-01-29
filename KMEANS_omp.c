@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
 		for(i=0; i<lines; i++){ 		//gira tutti i punti
 			class=1;					//valore di default
 			minDist=FLT_MAX; 			//valore di default 
-						/*
+			/*
 				TODO: aggiungere al file della relazione 
 				andare a parallelizzare questa parte non sarebbe utile perché andrebbe a creare troppi thread per ogni punto (linea) 
 				e distruggerli durano poco rispetto a quelli esterni
