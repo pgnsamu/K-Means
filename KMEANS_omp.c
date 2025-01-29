@@ -199,6 +199,7 @@ This function could be modified
 void zeroIntArray(int *array, int size)
 {
 	int i;
+	#pragma omp parallel for private(i)
 	for (i=0; i<size; i++)
 		array[i] = 0;	
 }

@@ -158,6 +158,7 @@ void initCentroids(const float *data, float* centroids, int* centroidPos, int sa
 {
 	int i;
 	int idx;
+	#pragma omp parallel for private(i,idx) shared(centroids, data, centroidPos, samples)
 	for(i=0; i<K; i++)
 	{
 		idx = centroidPos[i];
@@ -199,6 +200,7 @@ This function could be modified
 void zeroIntArray(int *array, int size)
 {
 	int i;
+	#pragma omp parallel for private(i) shared(array)
 	for (i=0; i<size; i++)
 		array[i] = 0;	
 }
@@ -356,7 +358,7 @@ int main(int argc, char* argv[])
 			classMaplocal[y] = 0;
 		}
 		int changesLocal = 0;
-		#pragma omp parallel for private(i,class,minDist,j) shared(classMap, classMaplocal) reduction(+:changesLocal)
+		#pragma omp parallel for private (i, j, class, minDist, dist), reduction(+:changesLocal) 
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++){
 			class=1;
 			minDist=FLT_MAX;
