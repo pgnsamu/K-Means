@@ -69,7 +69,7 @@ mpicc -fopenmp -o KMEANS_mpi_omp KMEANS_mpi_omp.c -lm
 ```
 run
 ```bash
-mpicc -fopenmp -o KMEANS_mpi_omp KMEANS_mpi_omp.c -lm
+mpirun -np 4 ./KMEANS_mpi_omp test_files/input100D2.inp 1000 3 50 0.01 output2D.inp
 ```
 
 
