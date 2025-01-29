@@ -62,9 +62,16 @@ export MPICH_CC=gcc-14  # For MPICH
 ```
 
 MPI+OMP
+-
+MAKEFILE
 ```bash
 mpicc -fopenmp -o KMEANS_mpi_omp KMEANS_mpi_omp.c -lm
 ```
+run
+```bash
+mpicc -fopenmp -o KMEANS_mpi_omp KMEANS_mpi_omp.c -lm
+```
+
 
 Unlimited Test
 ```bash
