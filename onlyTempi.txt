@@ -1,10 +1,63 @@
-2.104692 seconds
-2.069354 seconds
-2.073481 seconds
-2.490562 seconds
-2.056224 seconds
-2.548731 seconds
-2.149732 seconds
-2.446109 seconds
-2.231939 seconds
-2.759658 seconds
+__global__
+void distanceCalculationForEachPoint(float *data, float *centroids, int *classMap, int lines, int samples, int K){
+    extern __shared__ float sharedCentroids[]; // Shared memory per i centroidi
+
+    int i = blockIdx.x * blockDim.x + threadIdx.x; // Ogni thread lavora su un punto diverso
+    if (i >= lines) return; // Evita accessi fuori limite
+
+    // Ogni thread lavora sul proprio punto in global memory
+    float *point = &data[i * samples];
+
+    // Caricamento dei centroidi nella shared memory
+    for (int c = threadIdx.x; c < K * samples; c += blockDim.x) {
+        sharedCentroids[c] = centroids[c]; 
+    }
+    __syncthreads(); // Aspetta che tutti i centroidi siano caricati
+
+    // Identificazione della classe più vicina
+    int old_class = classMap[i];
+    float minDist = FLT_MAX;
+    int new_class = old_class;
+
+    for (int j = 0; j < K; j++) {
+        float dist = euclideanDistance(point, &sharedCentroids[j * samples], samples);
+        if (dist < minDist) {
+            minDist = dist;
+            new_class = j + 1;
+        }
+    }
+
+    // Controlla se la classe è cambiata
+    if (old_class != new_class) {
+        atomicAdd(&d_changes, 1);
+    }
+    classMap[i] = new_class;
+}
+
+
+__global__
+void recalculatesCentroids(float *data, int *classMap, int lines, int samples, int K, float* auxCentroids, int* pointsPerClass){
+    extern __shared__ float sharedAccumulators[]; // Shared memory per l'accumulazione
+
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= lines) return; // Evita accessi fuori limite
+
+    int classe = classMap[i] - 1;
+    
+    // Puntatore per la shared memory per ogni classe
+    float *sharedCentroid = &sharedAccumulators[classe * samples];
+    
+    // Copia locale dei dati
+    for (int j = threadIdx.x; j < samples; j += blockDim.x) {
+        atomicAdd(&sharedCentroid[j], data[i * samples + j]);
+    }
+    __syncthreads();
+
+    // Un solo thread per blocco aggiorna la global memory
+    if (threadIdx.x == 0) {
+        for (int j = 0; j < samples; j++) {
+            atomicAdd(&auxCentroids[classe * samples + j], sharedCentroid[j]);
+        }
+        atomicAdd(&pointsPerClass[classe], 1);
+    }
+}
