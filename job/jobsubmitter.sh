@@ -43,8 +43,8 @@ case $execfile in
     ;;
   5)
     job="job/seq.job"
-    logDir="../../seq/${outDirName}/logs"
-    outputFile="../../seq/${outputfile}_out.txt"
+    logDir="seq/${outDirName}/logs"
+    outputFile="seq/${outDirName}/${outputfile}_out.txt"
     ;;
   *)
     echo "Invalid executable file"
