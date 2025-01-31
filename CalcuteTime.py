@@ -42,12 +42,12 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
 
     # Salva i risultati in un file CSV
     if results:
-        with open(output_csv, mode="w", newline="") as csv_file:
+        with open(output_csv, mode="a", newline="") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(["Cartella", "Media Computation"])  # Intestazione
             writer.writerows(results)
         print(f"\nRisultati salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "seq"  # Cambia il percorso se necessario
+seq_directory = "omp"  # Cambia il percorso se necessario
 process_logs_in_seq(seq_directory)
