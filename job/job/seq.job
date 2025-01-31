@@ -12,4 +12,4 @@ executable = ./job/seqSubmit.sh
 
 request_cpus = 1
 
-queue 100
+queue
