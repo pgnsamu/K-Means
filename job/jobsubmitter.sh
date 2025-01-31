@@ -55,7 +55,7 @@ esac
 make all
 
 if [ ! -e "$inputfile" ]; then
-  echo "Input file not found"
+  echo "$inputfile not found"
   exit 1
 elif [ ! -d "$logDir" ]; then
   mkdir -p $logDir
