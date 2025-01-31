@@ -33,14 +33,14 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
                         values = extract_computation_number(file_path)
                         if values:
                             computation_values.extend(values)
-                            log_entries.extend([[file, v] for v in values])  # Salva file e valore
+                            log_entries.extend([[v] for v in values])  # Salva solo il valore
 
                 # Salva il CSV con i valori estratti per questa cartella logs/
                 if log_entries:
                     log_csv_path = os.path.join(seq_directory, f"logs_{subdir}.csv")
                     with open(log_csv_path, mode="w", newline="") as log_csv_file:
                         writer = csv.writer(log_csv_file)
-                        writer.writerow(["File", "Computation Value"])  # Intestazione
+                        writer.writerow(["Computation Value"])  # Intestazione con solo la colonna dei valori
                         writer.writerows(log_entries)
                     print(f"Salvati dettagli in '{log_csv_path}'")
 
@@ -55,11 +55,11 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
     # Salva le medie generali in un file CSV
     if results:
         with open(output_csv, mode="a", newline="") as csv_file:
-            writer = csv.writer(csv_file)
+            writer = csv.writer(csv_file, delimiter=";")
             writer.writerow(["Cartella", "Media Computation"])  # Intestazione
             writer.writerows(results)
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "omp"  # Cambia il percorso se necessario
+seq_directory = "seq"  # Cambia il percorso se necessario
 process_logs_in_seq(seq_directory)
