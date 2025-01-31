@@ -14,9 +14,11 @@ OMPFLAG=-fopenmp
 MPICC=mpicc
 CUDACC=nvcc
 
+
 # Flags for optimization and libs
 FLAGS=-O3 -Wall
 LIBS=-lm
+FMAD=--fmad=false
 
 # Targets to build
 OBJS=KMEANS_seq KMEANS_omp KMEANS_mpi KMEANS_cuda
@@ -50,7 +52,7 @@ KMEANS_mpi: KMEANS_mpi.c
 	$(MPICC) $(FLAGS) $(DEBUG) $< $(LIBS) -o $@
 
 KMEANS_cuda: KMEANS_cuda.cu
-	$(CUDACC) $(DEBUG) $< $(LIBS) -o $@
+	$(CUDACC) $(FMAD) $(DEBUG) $< $(LIBS) -o $@
 
 
 # Remove the target files

@@ -1,8 +1,11 @@
 MPI_OMP
 mpirun -np 4 ./KMEANS_mpi_omp test_files/input100D2.inp 8 100 0.01 0.001 output2D2.inp - Test Base
+mpirun -np 4 /home/samuele/kmeans/K-Means/KMEANS_mpi_omp /home/samuele/kmeans/K-Means/test_files/input100D2.inp 8 100 0.01 0.001 /home/samuele/kmeans/K-Means/output2D2.inp - Test Base
 
 OMP
 ./KMEANS_omp test_files/input100D2.inp 8 100 0.01 0.001 output2D.inp - Test Base
 
 MPI
 mpirun -np 4 ./KMEANS_mpi test_files/input100D2.inp 8 100 0.01 0.001 output2D2.inp
+
+nvcc --fmad=false KMEANS_cuda.cu -o KMEANS_cuda
