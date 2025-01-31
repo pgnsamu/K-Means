@@ -1,0 +1,20 @@
+universe = parallel
+
+executable = openmpiscript.sh
+
+should_transfer_files = YES
+
+transfer_input_files = ./job/omp_mpiSubmit.sh
+
+when_to_transfer_output = on_exit_or_evict
+
+#output = logs/out.$(NODE)
+#error = logs/err.$(NODE)
+#log = logs/log
+
+machine_count = 1
+request_cpus = 64
+
+getenv = True
+
+queue
