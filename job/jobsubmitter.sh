@@ -14,7 +14,7 @@ read -p "min node muved %: " minMoved
 read -p "distance precision: " precision
 read -p "output file name: " outputfile
 
-inputfile="$inputfileName.inp"
+inputfile="../test_files/$inputfileName.inp"
 
 outDirName="${inputfileName}_${k}_${maxIter}_${minMoved}_${precision}"
 
