@@ -54,12 +54,13 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
 
     # Salva le medie generali in un file CSV
     if results:
+        results_sorted = sorted(results, key=lambda x: x[0])
         with open(output_csv, mode="a", newline="") as csv_file:
             writer = csv.writer(csv_file, delimiter=";")
             writer.writerow(["Cartella", "Media Computation"])  # Intestazione
-            writer.writerows(results)
+            writer.writerows(results_sorted)
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "omp"  # Cambia il percorso se necessario
+seq_directory = "seq"  # Cambia il percorso se necessario
 process_logs_in_seq(seq_directory)
