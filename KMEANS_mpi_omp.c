@@ -347,11 +347,9 @@ int main(int argc, char* argv[])
 	int *pointsPerClassLocal = (int*)calloc(K,sizeof(int));
 	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
 	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
-	int global_continue;
 	// omp_set_num_threads(4); non lo devi fare 
 	do{
 		it++;
-		global_continue = 0;
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
 		changes = 0;
