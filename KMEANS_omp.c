@@ -377,7 +377,6 @@ int main(int argc, char* argv[])
 			centroidi <= punti (righe)
 			100*#colonne (coordinate)
 		*/
-		//TODO: aggiungere alla relazione che con reduction #pragma omp parallel for private(i,class,j) reduction(+:pointsPerClass[:K]) reduction(+:auxCentroids[:K*samples]) andava in segmentation fault
 
 		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
 		#pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids)
