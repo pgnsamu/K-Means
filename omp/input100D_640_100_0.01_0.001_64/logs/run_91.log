@@ -1,0 +1,25 @@
+000 (297019.091.000) 2025-02-01 17:32:47 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+001 (297019.091.000) 2025-02-01 17:33:12 Job executing on host: <192.168.0.106:9618?addrs=192.168.0.106-9618&alias=node106.di.rm1&noUDP&sock=startd_1970_d5a9>
+...
+006 (297019.091.000) 2025-02-01 17:33:14 Image size of job updated: 5824
+	4  -  MemoryUsage of job (MB)
+	3976  -  ResidentSetSize of job (KB)
+...
+005 (297019.091.000) 2025-02-01 17:33:14 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:01:23, Sys 0 00:00:02  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:01:23, Sys 0 00:00:02  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated 
+	   Cpus                 :                64        64 
+	   Disk (KB)            :       25       25    468979 
+	   Memory (MB)          :        4        1       128 
+
+	Job terminated of its own accord at 2025-02-01T17:33:14Z with exit-code 0.
+...
