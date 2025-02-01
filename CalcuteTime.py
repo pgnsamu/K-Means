@@ -39,7 +39,7 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
                 if log_entries:
                     log_csv_path = os.path.join(seq_directory, f"logs_{subdir}.csv")
                     with open(log_csv_path, mode="w", newline="") as log_csv_file:
-                        writer = csv.writer(log_csv_file)
+                        writer = csv.writer(log_csv_file, delimiter=";")
                         writer.writerow(["File", "Computation Value"])  # Intestazione
                         writer.writerows(log_entries)
                     print(f"Salvati dettagli in '{log_csv_path}'")
@@ -54,11 +54,29 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
 
     # Salva le medie generali in un file CSV
     if results:
-        results_sorted = sorted(results, key=lambda x: x[0])
-        with open(output_csv, mode="a", newline="") as csv_file:
+        # Estrai i nomi delle colonne e delle righe dai risultati
+        rows = sorted(set(subdir.split('_')[-1] for subdir, _ in results), key=int)
+        print(rows)
+        columns = sorted(set(subdir.split('_')[1] for subdir, _ in results), key=int)
+        print(columns)
+
+        # Crea una tabella vuota con intestazioni
+        table = [[""] + columns]
+        for row in rows:
+            table.append([row] + [""] * len(columns))
+
+        # Riempie la tabella con i valori medi
+        for subdir, mean_value in results:
+            col_key = subdir.split('_')[1]
+            row_key = subdir.split('_')[-1]
+            row_index = rows.index(row_key) + 1
+            col_index = columns.index(col_key) + 1
+            table[row_index][col_index] = mean_value
+
+        # Salva la tabella in un file CSV
+        with open(output_csv, mode="w", newline="") as csv_file:
             writer = csv.writer(csv_file, delimiter=";")
-            writer.writerow(["Cartella", "Media Computation"])  # Intestazione
-            writer.writerows(results_sorted)
+            writer.writerows(table)
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
