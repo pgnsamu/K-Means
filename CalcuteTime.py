@@ -80,5 +80,5 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "seq"  # Cambia il percorso se necessario
+seq_directory = "omp"  # Cambia il percorso se necessario
 process_logs_in_seq(seq_directory)
