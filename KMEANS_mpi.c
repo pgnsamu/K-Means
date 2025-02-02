@@ -342,16 +342,13 @@ int main(int argc, char* argv[])
 	int linesPerProcess = lines/size;	//numero di linee per processo
 	int *pointsPerClassLocal = (int*)calloc(K,sizeof(int));
 	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
-	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
 	do{
 		it++;
 
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
 		changes = 0;
-		for(int y=0;y<linesPerProcess;y++){
-			classMaplocal[y] = 0;
-		}
+		
 		int changesLocal = 0;
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++){
 			class=1;
@@ -435,7 +432,7 @@ int main(int argc, char* argv[])
 	//MPI_Barrier(MPI_COMM_WORLD);
 	free(pointsPerClassLocal);
 	free(auxCentroidsLocal);
-	free(classMaplocal);
+
 
 /*
  *
