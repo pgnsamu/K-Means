@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
 			if(classMap[i]!=class){
 				changesLocal++;
 			}
-			classMaplocal[i-rank*linesPerProcess]=class;
+			classMap[i]=class;
 		}
 
 		MPI_Allreduce(&changesLocal, &changes, 1, MPI_INT, MPI_SUM,MPI_COMM_WORLD);
@@ -396,7 +396,7 @@ int main(int argc, char* argv[])
 		
 		// 2. Recalculates the centroids: calculates the mean within each cluster
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++) {
-			class=classMaplocal[i-rank*linesPerProcess];
+			class=classMap[i];
 			pointsPerClassLocal[class-1] += 1;
 			for(j=0; j<samples; j++){
 				auxCentroidsLocal[(class-1)*samples+j] += data[i*samples+j];
@@ -431,8 +431,6 @@ int main(int argc, char* argv[])
 		memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
-		
-		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 	} while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
 	//MPI_Barrier(MPI_COMM_WORLD);
 	free(pointsPerClassLocal);
