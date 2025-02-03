@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
 		changes = 0; 	
 		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
 		// si potrebbe fare reduce
-		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes)  //# di cambiamenti per ogni iterazione 
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) schedule(dynamic) //# di cambiamenti per ogni iterazione 
 		for(i=0; i<lines; i++){ 		//gira tutti i punti
 			class=1;					//valore di default
 			minDist=FLT_MAX; 			//valore di default 
@@ -352,6 +352,7 @@ int main(int argc, char* argv[])
 				andare a parallelizzare questa parte non sarebbe utile perché andrebbe a creare troppi thread per ogni punto (linea) 
 				e distruggerli durano poco rispetto a quelli esterni
 			*/
+			
 			for(j=0; j<K; j++){ 		//calcola la distanza dal punto del primo for (i) al centroide j
 				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples); //samples = numero di coordinate per ogni punto
 
@@ -379,10 +380,9 @@ int main(int argc, char* argv[])
 		*/
 
 		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
-		#pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids)
+		#pragma omp parallel for private(i,class,j) shared(auxCentroids) reduction(+:pointsPerClass[:K]) 
 		for(i=0; i<lines; i++) {
 			class=classMap[i]; 			//per ogni punto prende il centroide più vicino 
-			#pragma omp atomic
 			pointsPerClass[class-1] += 1; 	//quanti punti appartengono a un centroide
 			
 			//scorre i valori delle coordinate del punto i (colonne)
