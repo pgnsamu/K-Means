@@ -405,7 +405,7 @@ int main(int argc, char* argv[])
 		int end = (rank+1)*centroidPerProcess;
 
         #pragma omp parallel for private(i,j) shared(auxCentroids, pointsPerClass) num_threads(NUM_THREADS)
-		for(i=0; i<K; i++) { // non si può parallelizzare perché se do x centroidi a un processo perché 
+		for(i=start; i<end; i++) { // non si può parallelizzare perché se do x centroidi a un processo perché 
 			for(j=0; j<samples; j++){
 				auxCentroids[i*samples+j] /= pointsPerClass[i];
 			}
@@ -414,7 +414,7 @@ int main(int argc, char* argv[])
 		//maxDist=FLT_MIN;
 		float maxDistLocal = FLT_MIN;
         #pragma omp parallel for private(i) reduction(max:maxDistLocal) num_threads(NUM_THREADS)
-		for(i=0; i<K; i++){ //non si potrebbe parallelizzare con mpi 
+		for(i=start; i<end; i++){ //non si potrebbe parallelizzare con mpi 
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
 			if(distCentroids[i]>maxDistLocal) {
 				maxDistLocal=distCentroids[i];
