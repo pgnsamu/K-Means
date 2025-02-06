@@ -407,7 +407,7 @@ int main(int argc, char* argv[]){
 	CHECK_CUDA_CALL(cudaDeviceSynchronize());
 
 	// Inizio iterazioni dell'algoritmo k-Means
-	start = clock() / (double)CLOCKS_PER_SEC);
+	start = clock() / (double)CLOCKS_PER_SEC;
 	char *outputMsg = (char *)calloc(10000, sizeof(char));
 	char line[100];
 	int it = 0;
