@@ -53,6 +53,8 @@ KMEANS_mpi: KMEANS_mpi.c
 
 KMEANS_cuda: KMEANS_cuda.cu
 	$(CUDACC) $(FMAD) $(DEBUG) $< $(LIBS) -o $@
+KMEANS_cuda2: KMEANS_cuda2.cu
+	$(CUDACC) $(FMAD) $(DEBUG) $< $(LIBS) -o $@
 
 
 # Remove the target files

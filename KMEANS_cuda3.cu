@@ -240,51 +240,31 @@ Function distanceCalculationForEachPoint: It calculates the distance from each p
 changes deve diventare condivisa tra i thread
 */
 __global__
-void distanceCalculationForEachPoint(float *data, float *centroids, int *classMap, int lines, int samples, int K, int iterations) {
-    // Definiamo un'area di memoria condivisa per contenere tutti i centroidi del blocco.
-    extern __shared__ float s_centroids[];
+void distanceCalculationForEachPoint(float *data, float *centroids, int *classMap, int lines, int samples, int K, int iterations){
+	
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if(i<lines){
+		int old_class = classMap[i]; // TODO: probabile da aggiungere anche negli altri file
+		float dist, minDist;
+		minDist = FLT_MAX;
 
-    // Ogni blocco copia i centroidi dalla memoria globale in shared memory.
-    int tid = threadIdx.x;
-    int totalCentroidsElements = K * samples;
-    // Ogni thread carica più di un elemento se necessario.
-    for (int idx = tid; idx < totalCentroidsElements; idx += blockDim.x) {
-        s_centroids[idx] = centroids[idx];
-    }
-    __syncthreads();  // Assicuriamoci che tutti i centroidi siano copiati prima di procedere.
-
-    // Calcola l'indice globale del punto.
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < lines) {
-        int old_class = classMap[i];
-        float minDist = FLT_MAX;
-        int new_class = old_class;
-        // Puntatore al punto corrente.
-        float *point = &data[i * samples];
-
-        // Itera su tutti i centroidi (ora in shared memory).
-        for (int j = 0; j < K; j++) {
-            float dist = 0.0f;
-            // Puntatore al centroide j in shared memory.
-            float *centroid = &s_centroids[j * samples];
-            // Calcola la distanza euclidea.
-            for (int k = 0; k < samples; k++) {
-                float diff = point[k] - centroid[k];
-                dist += diff * diff;
-            }
-            dist = sqrtf(dist);
-            if (dist < minDist) {
-                minDist = dist;
-                new_class = j + 1;  // Considera che i cluster sono indicizzati da 1
-            }
-        }
-        // Se la classe è cambiata, aggiorna la variabile globale atomica.
-        if (old_class != new_class) {
-            atomicAdd(&d_changes, 1);
-        }
-        // Aggiorna la mappa delle classi.
-        classMap[i] = new_class;
-    }
+		// Trova la nuova classe
+		int new_class = old_class; 
+		for(int j=0; j<K; j++){
+			
+			dist = euclideanDistance(&data[i*samples], &centroids[j*samples], samples);
+			if(dist < minDist){
+				minDist = dist;
+				new_class = j+1;
+			}
+		}
+		// Confronta la vecchia e la nuova classe
+		if(old_class != new_class){
+			atomicAdd(&d_changes, 1);
+		}
+		// Aggiorna classMap con la nuova classe
+		classMap[i] = new_class;
+	}
 }
 __global__
 void recalculatesCentroids(float *data, int *classMap, int lines, int samples, int K, float* auxCentroids, int* pointsPerClass){
@@ -497,14 +477,8 @@ int main(int argc, char* argv[]){
 		CHECK_CUDA_CALL(cudaMemcpy(d_centroids, centroids, K * samples * sizeof(float), cudaMemcpyHostToDevice));
 		CHECK_CUDA_CALL(cudaMemcpy(d_classMap, classMap, lines * sizeof(int), cudaMemcpyHostToDevice));
 
-
-		//int blockSize = 256;
-		//int numBlocks = (lines + blockSize - 1) / blockSize ;
-		size_t sharedMemSize = K * samples * sizeof(float);
-
-		distanceCalculationForEachPoint<<<numBlocks, blockSize, sharedMemSize>>>(d_data, d_centroids, d_classMap, lines, samples, K, it);
 		// Launch the kernel
-		//distanceCalculationForEachPoint<<<numBlocks, blockSize>>>(d_data, d_centroids, d_classMap, lines, samples, K,it);
+		distanceCalculationForEachPoint<<<numBlocks, blockSize>>>(d_data, d_centroids, d_classMap, lines, samples, K,it);
 
 		CHECK_CUDA_CALL(cudaDeviceSynchronize());
 		
