@@ -310,13 +310,11 @@ int main(int argc, char* argv[])
         iteration++;
         
         // ----- Step 1: Cluster Assignment -----
-        assignClusters<<<blocks, threadsPerBlock>>>(d_data, d_centroids, d_cluster_assignments,
-                                                      lines, samples, K);
+        assignClusters<<<blocks, threadsPerBlock>>>(d_data, d_centroids, d_cluster_assignments, lines, samples, K);
         cudaDeviceSynchronize();
         
         // Copy the updated cluster assignments from device to host.
-        cudaMemcpy(h_cluster_assignments, d_cluster_assignments, lines * sizeof(int),
-                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_cluster_assignments, d_cluster_assignments, lines * sizeof(int), cudaMemcpyDeviceToHost);
         
         // Count how many points changed their cluster assignment.
         changes = 0;
@@ -332,18 +330,14 @@ int main(int argc, char* argv[])
         cudaMemset(d_cluster_counts, 0, K * sizeof(int));
         
         // Launch the kernel to compute the new centroid sums and point counts.
-        computeCentroidSums<<<blocks, threadsPerBlock>>>(d_data, d_cluster_assignments,
-                                                          d_centroid_sums, d_cluster_counts,
-                                                          lines, samples);
+        computeCentroidSums<<<blocks, threadsPerBlock>>>(d_data, d_cluster_assignments, d_centroid_sums, d_cluster_counts, lines, samples);
         cudaDeviceSynchronize();
         
         // Copy the computed sums and counts back to the host.
         float *h_centroid_sums = (float*)malloc(K * samples * sizeof(float));
         int *h_cluster_counts = (int*)malloc(K * sizeof(int));
-        cudaMemcpy(h_centroid_sums, d_centroid_sums, K * samples * sizeof(float),
-                   cudaMemcpyDeviceToHost);
-        cudaMemcpy(h_cluster_counts, d_cluster_counts, K * sizeof(int),
-                   cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_centroid_sums, d_centroid_sums, K * samples * sizeof(float), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_cluster_counts, d_cluster_counts, K * sizeof(int), cudaMemcpyDeviceToHost);
         
         // Update the centroids on the host and compute the maximum centroid movement.
         maxCentroidMovement = 0.0f;
@@ -369,16 +363,12 @@ int main(int argc, char* argv[])
         free(h_cluster_counts);
         
         // Copy the updated centroids back to the device.
-        cudaMemcpy(d_centroids, h_centroids, K * samples * sizeof(float),
-                   cudaMemcpyHostToDevice);
+        cudaMemcpy(d_centroids, h_centroids, K * samples * sizeof(float), cudaMemcpyHostToDevice);
         
         // Optionally, print out the iteration statistics.
-        printf("[%d] Cluster changes: %d\tMax centroid movement: %f\n",
-               iteration, changes, maxCentroidMovement);
+        printf("[%d] Cluster changes: %d\tMax centroid movement: %f\n", iteration, changes, maxCentroidMovement);
         
-    } while ((changes > minChanges) &&
-             (iteration < maxIterations) &&
-             (maxCentroidMovement > maxThreshold));
+    } while ((changes > minChanges) && (iteration < maxIterations) && (maxCentroidMovement > maxThreshold));
     
     end = clock();
     printf("Computation time: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
