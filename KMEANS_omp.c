@@ -337,7 +337,6 @@ int main(int argc, char* argv[])
 		}
 
 		// Media: divide la sommatoria delle coordinate per il numero di punti per ogni cluster
-		#pragma omp parallel for private(i,j) shared(auxCentroids,pointsPerClass)
 		for(i=0; i<K; i++) {
 			for(j=0; j<samples; j++){
 				auxCentroids[i*samples+j] /= pointsPerClass[i];
@@ -347,7 +346,6 @@ int main(int argc, char* argv[])
 		// 3. Valutazione del criterio di uscita:
 		// Calcola la massima distanza tra vecchi e nuovi centroidi
 		maxDist = FLT_MIN;
-		#pragma omp parallel for private(i) reduction(max:maxDist)
 		for(i=0; i<K; i++){
 			distCentroids[i] = euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
 			if(distCentroids[i] > maxDist){
