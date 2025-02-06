@@ -432,7 +432,7 @@ int main(int argc, char* argv[]){
 		CHECK_CUDA_CALL(cudaMemcpyToSymbol(d_changes, &h_changes, sizeof(int), 0, cudaMemcpyHostToDevice));
 
 		// Definizione del grid e block size per i kernel CUDA
-		int blockSize = 256;
+		int blockSize = 1024;
 		int numBlocks = (lines + blockSize - 1) / blockSize;
 
 		// Allocazione memoria device per dati, centroidi e mappa delle classi
@@ -473,7 +473,7 @@ int main(int argc, char* argv[]){
 		CHECK_CUDA_CALL(cudaDeviceSynchronize());
 		
 		// Aggiornamento del numero di thread per aggiornare i centroidi
-		blockSize = 64;
+		blockSize = 256;
 		numBlocks = (K + blockSize - 1) / blockSize;
 		updateCentroids<<<numBlocks, blockSize>>>(d_auxCentroids, d_pointsPerClass, samples, K);
 		CHECK_CUDA_CALL(cudaDeviceSynchronize());
