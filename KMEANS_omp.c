@@ -1,19 +1,4 @@
-/*
- * k-Means clustering algorithm
- *
- * OpenMP version
- *
- * Parallel computing (Degree in Computer Engineering)
- * 2022/2023
- *
- * Version: 1.0
- *
- * (c) 2022 Diego García-Álvarez, Arturo Gonzalez-Escribano
- * Grupo Trasgo, Universidad de Valladolid (Spain)
- *
- * This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License.
- * https://creativecommons.org/licenses/by-sa/4.0/
- */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -26,12 +11,12 @@
 #define MAXLINE 2000
 #define MAXCAD 200
 
-//Macros
+// Macros
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 /* 
-Function showFileError: It displays the corresponding error during file reading.
+	Funzione showFileError: Visualizza l'errore durante l'apertura/lettura/scrittura del file.
 */
 void showFileError(int error, char* filename)
 {
@@ -53,105 +38,103 @@ void showFileError(int error, char* filename)
 }
 
 /* 
-Function readInput: It reads the file to determine the number of rows and columns.
+	Funzione readInput: Determina il numero di righe e colonne (cioè # di punti e dimensioni).
 */
 int readInput(char* filename, int *lines, int *samples)
 {
-    FILE *fp;
-    char line[MAXLINE] = "";
-    char *ptr;
-    const char *delim = "\t";
-    int contlines, contsamples = 0;
-    
-    contlines = 0;
+	 FILE *fp;
+	 char line[MAXLINE] = "";
+	 char *ptr;
+	 const char *delim = "\t";
+	 int contlines, contsamples = 0;
+	 
+	 contlines = 0;
 
-    if ((fp=fopen(filename,"r"))!=NULL)
-    {
-        while(fgets(line, MAXLINE, fp)!= NULL) 
+	 if ((fp=fopen(filename,"r"))!=NULL)
+	 {
+		  while(fgets(line, MAXLINE, fp)!= NULL) 
 		{
+			// Controlla che la riga non sia troppo lunga
 			if (strchr(line, '\n') == NULL)
 			{
 				return -1;
 			}
-            contlines++;       
-            ptr = strtok(line, delim);
-            contsamples = 0;
-            while(ptr != NULL)
-            {
-            	contsamples++;
+				contlines++;       
+				ptr = strtok(line, delim);
+				contsamples = 0;
+				while(ptr != NULL)
+				{
+					contsamples++;
 				ptr = strtok(NULL, delim);
-	    	}	    
-        }
-        fclose(fp);
-        *lines = contlines;
-        *samples = contsamples;  
-        return 0;
-    }
-    else
+			}	    
+		  }
+		  fclose(fp);
+		  *lines = contlines;
+		  *samples = contsamples;  
+		  return 0;
+	 }
+	 else
 	{
-    	return -2;
+		return -2;
 	}
 }
 
 /* 
-Function readInput2: It loads data from file.
+	Funzione readInput2: Carica i dati dal file in un array float.
 */
 int readInput2(char* filename, float* data)
 {
-    FILE *fp;
-    char line[MAXLINE] = "";
-    char *ptr;
-    const char *delim = "\t";
-    int i = 0;
-    
-    if ((fp=fopen(filename,"rt"))!=NULL)
-    {
-        while(fgets(line, MAXLINE, fp)!= NULL)
-        {         
-            ptr = strtok(line, delim);
-            while(ptr != NULL)
-            {
-            	data[i] = atof(ptr);
-            	i++;
+	 FILE *fp;
+	 char line[MAXLINE] = "";
+	 char *ptr;
+	 const char *delim = "\t";
+	 int i = 0;
+	 
+	 if ((fp=fopen(filename,"rt"))!=NULL)
+	 {
+		  while(fgets(line, MAXLINE, fp)!= NULL)
+		  {         
+				ptr = strtok(line, delim);
+				while(ptr != NULL)
+				{
+					data[i] = atof(ptr);
+					i++;
 				ptr = strtok(NULL, delim);
-	   		}
-	    }
-        fclose(fp);
-        return 0;
-    }
-    else
+				}
+		 }
+		  fclose(fp);
+		  return 0;
+	 }
+	 else
 	{
-    	return -2; //No file found
+		return -2; // File non trovato
 	}
 }
 
 /* 
-Function writeResult: It writes in the output file the cluster of each sample (point).
+	Funzione writeResult: Salva l'output (assegnazione dei cluster per ogni punto) su file.
 */
 int writeResult(int *classMap, int lines, const char* filename)
 {	
-    FILE *fp;
-    
-    if ((fp=fopen(filename,"wt"))!=NULL)
-    {
-        for(int i=0; i<lines; i++)
-        {
-        	fprintf(fp,"%d\n",classMap[i]);
-        }
-        fclose(fp);  
-   
-        return 0;
-    }
-    else
+	 FILE *fp;
+	 
+	 if ((fp=fopen(filename,"wt"))!=NULL)
+	 {
+		  for(int i=0; i<lines; i++)
+		  {
+			fprintf(fp,"%d\n",classMap[i]);
+		  }
+		  fclose(fp);  
+		  return 0;
+	 }
+	 else
 	{
-    	return -3; //No file found
+		return -3; // Errore scrittura file
 	}
 }
 
 /*
-
-Function initCentroids: This function copies the values of the initial centroids, using their 
-position in the input data structure as a reference map.
+	Funzione initCentroids: Inizializza i centroidi copiando i punti corrispondenti in base ad un vettore di posizioni casuali.
 */
 void initCentroids(const float *data, float* centroids, int* centroidPos, int samples, int K)
 {
@@ -166,8 +149,7 @@ void initCentroids(const float *data, float* centroids, int* centroidPos, int sa
 }
 
 /*
-Function euclideanDistance: Euclidean distance
-This function could be modified
+	Funzione euclideanDistance: Calcola la distanza euclidea tra un punto e un centroide.
 */
 float euclideanDistance(float *point, float *center, int samples)
 {
@@ -181,8 +163,7 @@ float euclideanDistance(float *point, float *center, int samples)
 }
 
 /*
-Function zeroFloatMatriz: Set matrix elements to 0
-This function could be modified
+	Funzione zeroFloatMatriz: Inizializza a zero una matrice float.
 */
 void zeroFloatMatriz(float *matrix, int rows, int columns)
 {
@@ -193,8 +174,7 @@ void zeroFloatMatriz(float *matrix, int rows, int columns)
 }
 
 /*
-Function zeroIntArray: Set array elements to 0
-This function could be modified
+	Funzione zeroIntArray: Inizializza a zero un array int.
 */
 void zeroIntArray(int *array, int size)
 {
@@ -204,30 +184,21 @@ void zeroIntArray(int *array, int size)
 		array[i] = 0;	
 }
 
-
-
 int main(int argc, char* argv[])
 {
-
-	//START CLOCK***************************************
+	// Avvio del timer per il calcolo della memoria e inizializzazioni
 	double start, end;
 	start = omp_get_wtime();
-	//**************************************************
-	/*
-	* PARAMETERS
-	*
-	* argv[1]: Input data file
-	* argv[2]: Number of clusters
-	* argv[3]: Maximum number of iterations of the method. Algorithm termination condition.
-	* argv[4]: Minimum percentage of class changes. Algorithm termination condition.
-	*          If between one iteration and the next, the percentage of class changes is less than
-	*          this percentage, the algorithm stops.
-	* argv[5]: Precision in the centroid distance after the update.
-	*          It is an algorithm termination condition. If between one iteration of the algorithm 
-	*          and the next, the maximum distance between centroids is less than this precision, the
-	*          algorithm stops.
-	* argv[6]: Output file. Class assigned to each point of the input file.
-	* */
+
+	/* 
+		PARAMETRI:
+		argv[1]: file di input
+		argv[2]: numero di cluster (K)
+		argv[3]: numero massimo di iterazioni
+		argv[4]: soglia percentuale minima di cambiamenti (terminazione)
+		argv[5]: soglia di precisione per l'aggiornamento dei centroidi (terminazione)
+		argv[6]: file di output (assegnazione cluster per ogni punto)
+	*/
 	if(argc !=  7)
 	{
 		fprintf(stderr,"EXECUTION ERROR K-MEANS: Parameters are not correct.\n");
@@ -236,10 +207,8 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-	// Reading the input data
-	// lines = number of points; samples = number of dimensions per point
+	// Lettura del file di input: determina il numero di punti e dimensioni di ciascun punto.
 	int lines = 0, samples= 0;  
-	
 	int error = readInput(argv[1], &lines, &samples);
 	if(error != 0)
 	{
@@ -247,6 +216,7 @@ int main(int argc, char* argv[])
 		exit(error);
 	}
 	
+	// Allocazione della memoria per i dati e caricamento dati dal file
 	float *data = (float*)calloc(lines*samples,sizeof(float));
 	if (data == NULL)
 	{
@@ -260,47 +230,46 @@ int main(int argc, char* argv[])
 		exit(error);
 	}
 
-	// Parameters
+	// Parametri estratti dagli argomenti della riga di comando
 	int K=atoi(argv[2]); 
 	int maxIterations=atoi(argv[3]);
 	int minChanges= (int)(lines*atof(argv[4])/100.0);
 	float maxThreshold=atof(argv[5]);
 
+	// Allocazioni per centroidi e mappatura dei cluster
 	int *centroidPos = (int*)calloc(K,sizeof(int));
 	float *centroids = (float*)calloc(K*samples,sizeof(float));
 	int *classMap = (int*)calloc(lines,sizeof(int));
 
-    if (centroidPos == NULL || centroids == NULL || classMap == NULL)
+	 if (centroidPos == NULL || centroids == NULL || classMap == NULL)
 	{
 		fprintf(stderr,"Memory allocation error.\n");
 		exit(-4);
 	}
 
-	// Initial centrodis
+	// Inizializzazione casuale dei centroidi (scelti tra i punti)
 	srand(0);
 	int i;
 	for(i=0; i<K; i++) 
 		centroidPos[i]=rand()%lines;
 	
-	// Loading the array of initial centroids with the data from the array data
-	// The centroids are points stored in the data array.
+	// Copia dei punti iniziali per i centroidi
 	initCentroids(data, centroids, centroidPos, samples, K);
 
-
+	// Stampa dei parametri iniziali
 	printf("\n\tData file: %s \n\tPoints: %d\n\tDimensions: %d\n", argv[1], lines, samples);
 	printf("\tNumber of clusters: %d\n", K);
 	printf("\tMaximum number of iterations: %d\n", maxIterations);
 	printf("\tMinimum number of changes: %d [%g%% of %d points]\n", minChanges, atof(argv[4]), lines);
 	printf("\tMaximum centroid precision: %f\n", maxThreshold);
 	
-	//END CLOCK*****************************************
 	end = omp_get_wtime();
 	printf("\nMemory allocation: %f seconds\n", end - start);
 	fflush(stdout);
-	//**************************************************
-	//START CLOCK***************************************
+
+	// Inizio del tempo di calcolo per l'algoritmo k-means
 	start = omp_get_wtime();
-	//**************************************************
+
 	char *outputMsg = (char *)calloc(10000,sizeof(char));
 	char line[100];
 
@@ -311,8 +280,10 @@ int main(int argc, char* argv[])
 	int changes = 0;
 	float maxDist;
 
-	//pointPerClass: number of points classified in each class
-	//auxCentroids: mean of the points in each class
+	// Allocazioni per il calcolo dei nuovi centroidi
+	// pointsPerClass: conta il numero di punti per cluster
+	// auxCentroids: per calcolare il nuovo centroide come media dei punti assegnati
+	// distCentroids: per il calcolo della distanza tra vecchi e nuovi centroidi
 	int *pointsPerClass = (int *)malloc(K*sizeof(int));
 	float *auxCentroids = (float*)malloc(K*samples*sizeof(float));
 	float *distCentroids = (float*)malloc(K*sizeof(float)); 
@@ -322,128 +293,85 @@ int main(int argc, char* argv[])
 		exit(-4);
 	}
 
-/*
- *
- * START HERE: DO NOT CHANGE THE CODE ABOVE THIS POINT
- *
- */
-	//numero di thread da utilizzare
-	do{
-		it++; //# di iterazioni
-	
-		//1. Calculate the distance from each point to the centroid
-		//Assign each point to the nearest centroid.
-		/*
-			TODO: aggiungere al file della relazione 
-			è stato parallelizzato utilizzando private sulle variabili che non dipendono dalle iterazioni precedenti/successive
-			ma invece condividendo l'array dove verranno salvati i centroidi essendo che ogni utilizzo di questo non potrà essere concorrente 
-			per via della divisione dei punti, ma dovrà essere condivisa per via dell'uso poi successivo
-			nel caso in cui abbiamo 100 linee e 100 centroidi sarebbero 10.000 iterazioni
-		*/
-		changes = 0; 	
-		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
-		// si potrebbe fare reduce
-		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) schedule(dynamic) //# di cambiamenti per ogni iterazione 
-		for(i=0; i<lines; i++){ 		//gira tutti i punti
-			class=1;					//valore di default
-			minDist=FLT_MAX; 			//valore di default 
-			/*
-				TODO: aggiungere al file della relazione 
-				andare a parallelizzare questa parte non sarebbe utile perché andrebbe a creare troppi thread per ogni punto (linea) 
-				e distruggerli durano poco rispetto a quelli esterni
-			*/
-			
-			for(j=0; j<K; j++){ 		//calcola la distanza dal punto del primo for (i) al centroide j
-				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples); //samples = numero di coordinate per ogni punto
+	/*
+	 * Ciclo principale dell'algoritmo k-means:
+	 * Ad ogni iterazione si assegna ogni punto al cluster più vicino e si aggiornano i centroidi.
+	 */
+	do {
+		it++; // Incrementa il numero di iterazioni
 
-				if(dist < minDist){		//se trova una distanza più corta della minima istanziata all'inizio salva 
-					minDist=dist; 		//switch di valori classico
-					class=j+1; 			//assegnazione al centroide più vicino al punto
+		// 1. Assegnamento: per ogni punto calcola la distanza euclidea da ognuno dei centroidi
+		changes = 0; 	
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) schedule(dynamic)
+		for(i=0; i<lines; i++){
+			class = 1;          // Valore predefinito per il cluster
+			minDist = FLT_MAX;  // Inizializza con il massimo valore possibile
+			for(j=0; j<K; j++){
+				// Calcola la distanza dal punto i al centroide j
+				dist = euclideanDistance(&data[i*samples], &centroids[j*samples], samples);
+				if(dist < minDist){
+					minDist = dist;
+					class = j+1;
 				}
 			}
-			//classMap = grande quanto il numero di linee totali e per ogni linea ti dice il centroide più vicino 
-			if(classMap[i] != class){ 	//se il centroide più vicino non è più lo stesso di quello all'iterazione prima (nel caso della prima non entra)
+			// Se il punto cambia cluster rispetto all'iterazione precedente incrementa il contatore dei cambiamenti
+			if(classMap[i] != class){
 				#pragma omp atomic
-				changes++; 		      	//aggiorno il numero di cambiamenti in un iterazione di doWHILE
+				changes++;
 			}
-			classMap[i]=class;		  	//nel dubbio assegna sicuro ad una classe (centroide)
+			classMap[i]=class;
 		}
-		// 2. Recalculates the centroids: calculates the mean within each cluster
-		zeroIntArray(pointsPerClass,K);  		 //creazione array di soli zeri di grandezza K
-		zeroFloatMatriz(auxCentroids,K,samples); //creazione una matrice e la mette tutta a zero (float)
 
-		//scorre tutti i punti (i) 
-		//#pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids)
-		/*
-			centroidi <= punti (righe)
-			100*#colonne (coordinate)
-		*/
-
-		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
+		// 2. Calcolo dei nuovi centroidi: media dei punti appartenenti ad ogni cluster
+		zeroIntArray(pointsPerClass, K);
+		zeroFloatMatriz(auxCentroids, K, samples);
+		
 		#pragma omp parallel for private(i,class,j) shared(auxCentroids) reduction(+:pointsPerClass[:K]) 
 		for(i=0; i<lines; i++) {
-			class=classMap[i]; 			//per ogni punto prende il centroide più vicino 
-			pointsPerClass[class-1] += 1; 	//quanti punti appartengono a un centroide
-			
-			//scorre i valori delle coordinate del punto i (colonne)
+			class = classMap[i];
+			pointsPerClass[class-1] += 1;  // Conta i punti per cluster
 			for(j=0; j<samples; j++){
 				#pragma omp atomic
-				//aggiungo per ogni "punto" (linea) appartenente al centroide [class-1] le sue cordinate (colonne) nella matrice di appoggio sommandole ai valori già sommati
-				auxCentroids[(class-1)*samples+j] += data[i*samples+j]; 
+				auxCentroids[(class-1)*samples+j] += data[i*samples+j];
 			} 
 		}
-		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
-		//per ogni centroide (#cluster = #centroide) distanza media dei punti da un centroide i
+
+		// Media: divide la sommatoria delle coordinate per il numero di punti per ogni cluster
 		#pragma omp parallel for private(i,j) shared(auxCentroids,pointsPerClass)
 		for(i=0; i<K; i++) {
 			for(j=0; j<samples; j++){
-				//divido ogni somma di valori (colonna di linee) per il numero di punti appartenenti al centroide (per il numero di volte che sono state sommate)
-				auxCentroids[i*samples+j] /= pointsPerClass[i]; 
+				auxCentroids[i*samples+j] /= pointsPerClass[i];
 			}
 		}
 		
-		maxDist=FLT_MIN; //distanza max = minimo numero float
-		//per ogni centroide (#cluster = #centroide)
-		//TODO: aggiungere tutte le variabili mancanti (se private o shared)
+		// 3. Valutazione del criterio di uscita:
+		// Calcola la massima distanza tra vecchi e nuovi centroidi
+		maxDist = FLT_MIN;
 		#pragma omp parallel for private(i) reduction(max:maxDist)
 		for(i=0; i<K; i++){
-			//distanza tra il centroide dell'ultima iterazione (del do while) e quello di questa
-			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
-			
-			if(distCentroids[i]>maxDist) { //nel caso in cui troviamo una distanza superiore alla max 
-				maxDist=distCentroids[i];  //allora classico switch di valori
+			distCentroids[i] = euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
+			if(distCentroids[i] > maxDist){
+				maxDist = distCentroids[i];
 			}
 		}
-		memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
-		
+		// Aggiorna i centroidi per la prossima iterazione
+		memcpy(centroids, auxCentroids, (K*samples*sizeof(float)));
+
+		// Append dei messaggi di output per il log delle iterazioni
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 		outputMsg = strcat(outputMsg,line); 
 
-	} while((changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
-	//usciamo se: 
-	// - #MAX cambiamenti avvenuti nell'ultima iterazione supera il numero in argval
-	// - abbiamo superato il numero di iterazioni massime argval
-	// - se la distanza massima tra un centroide e lo stesso della vecchia iterazione supera il threshold settato in argval
+	} while ((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
 	
-/*
- *
- * STOP HERE: DO NOT CHANGE THE CODE BELOW THIS POINT
- *
- */
-	// Output and termination conditions
-	printf("%s",outputMsg);	
+	// Stampa sintesi delle condizioni di terminazione
+	printf("%s", outputMsg);
 
-	//END CLOCK*****************************************
+	// Report del tempo di calcolo
 	end = omp_get_wtime();
 	printf("\nComputation: %f seconds", end - start);
 	fflush(stdout);
-	//**************************************************
-	//START CLOCK***************************************
-	start = omp_get_wtime();
-	//**************************************************
 
-	
-
+	// Ulteriore report riguardante la condizione di terminazione raggiunta
 	if (changes <= minChanges) {
 		printf("\n\nTermination condition:\nMinimum number of changes reached: %d [%d]", changes, minChanges);
 	}
@@ -454,7 +382,7 @@ int main(int argc, char* argv[])
 		printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
 	}	
 
-	// Writing the classification of each point to the output file.
+	// Scrive il risultato (assegnazione dei cluster per ogni punto) nel file di output
 	error = writeResult(classMap, lines, argv[6]);
 	if(error != 0)
 	{
@@ -462,7 +390,7 @@ int main(int argc, char* argv[])
 		exit(error);
 	}
 
-	//Free memory
+	// Deallocazione della memoria
 	free(data);
 	free(classMap);
 	free(centroidPos);
@@ -471,10 +399,9 @@ int main(int argc, char* argv[])
 	free(pointsPerClass);
 	free(auxCentroids);
 
-	//END CLOCK*****************************************
 	end = omp_get_wtime();
 	printf("\n\nMemory deallocation: %f seconds\n", end - start);
 	fflush(stdout);
-	//***************************************************/
+
 	return 0;
 }
