@@ -56,10 +56,8 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
     if results:
         # Estrai i nomi delle colonne e delle righe dai risultati
         rows = sorted(set(subdir.split('_')[-1] for subdir, _ in results), key=int)
-        print(rows)
-        columns = sorted(set(subdir.split('_')[1] for subdir, _ in results), key=int)
-        print(columns)
-
+        columns = sorted(set(subdir.split('_')[0] for subdir, _ in results), key=int)
+        
         # Crea una tabella vuota con intestazioni
         table = [[""] + columns]
         for row in rows:
@@ -67,8 +65,8 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
 
         # Riempie la tabella con i valori medi
         for subdir, mean_value in results:
-            col_key = subdir.split('_')[1]
-            row_key = subdir.split('_')[-1]
+            col_key = subdir.split('_')[0]  # Primo elemento per la colonna
+            row_key = subdir.split('_')[-1]  # Ultimo elemento per la riga
             row_index = rows.index(row_key) + 1
             col_index = columns.index(col_key) + 1
             table[row_index][col_index] = mean_value
@@ -80,5 +78,5 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "omp"  # Cambia il percorso se necessario
+seq_directory = "seq"  # Cambia il percorso se necessario
 process_logs_in_seq(seq_directory)
