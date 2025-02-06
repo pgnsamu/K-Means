@@ -26,6 +26,7 @@
 
 #define MAXLINE 2000
 #define MAXCAD 200
+#define NUM_THREADS 4
 
 //Macros
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -346,11 +347,9 @@ int main(int argc, char* argv[])
 	int *pointsPerClassLocal = (int*)calloc(K,sizeof(int));
 	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
 	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
-	int global_continue;
-	//omp_set_num_threads(8);
+	// omp_set_num_threads(4); non lo devi fare 
 	do{
 		it++;
-		global_continue = 0;
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
 		changes = 0;
@@ -358,11 +357,11 @@ int main(int argc, char* argv[])
 			classMaplocal[y] = 0;
 		}
 		int changesLocal = 0;
-		#pragma omp parallel for private (i, j, class, minDist, dist), reduction(+:changesLocal) 
+		#pragma omp parallel for private (i, j, class, minDist, dist) reduction(+:changesLocal) num_threads(NUM_THREADS)
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++){
 			class=1;
 			minDist=FLT_MAX;
-			for(j=0; j<K; j++){ //TODO: capire se j va messa privata?
+			for(j=0; j<K; j++){ 
 				dist=euclideanDistance(&data[i*samples], &centroids[j*samples], samples);
 				if(dist < minDist){
 					minDist=dist;
@@ -375,41 +374,26 @@ int main(int argc, char* argv[])
 			classMaplocal[i-rank*linesPerProcess]=class;
 		}
 
-		MPI_Reduce(&changesLocal, &changes, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+		MPI_Allreduce(&changesLocal, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 		// Teoricamente conviene lasciare per il momento classMaplocal e non usare MPI_ALLGATHER
 		// Problema principale: indici del for vanno in index out of range
-		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
-
-		/*
-		char stringa[100];
-		sprintf(stringa,"centroids_rank%d_it%d.txt", rank, it);
-		error = writeResults(centroids, lines, stringa);
-
-		printf("\n--------------rank: %d, it: %d, changes: %d-------------------\n", rank, it, changesLocal);
-		for(int b=49990;b<49990+20;b++){
-			//printf("%f auxcentroid", auxCentroids[b]);
-			printf("%d ", classMap[b]);
-		}
-		printf("\n--------------rank: %d, it: %d, changes: %d-------------------\n", rank, it, changes);
-		*/
+		//MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD); // evitare di condividerlo
 
 
-		if(rank == 0){
-			zeroIntArray(pointsPerClass,K);
-			zeroFloatMatriz(auxCentroids,K,samples);
-		}
+		zeroIntArray(pointsPerClass,K);
+		zeroFloatMatriz(auxCentroids,K,samples);
 		zeroIntArray(pointsPerClassLocal,K);
 		zeroFloatMatriz(auxCentroidsLocal,K,samples);
 
-		
+		/*
+		#pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids) //non ci sono modifiche significative nel tempo !!!
+		*/
 		// 2. Recalculates the centroids: calculates the mean within each cluster
-        #pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids)//non ci sono modifiche significative nel tempo !!!
+        #pragma omp parallel for private(i,class,j) shared(pointsPerClass,auxCentroids) reduction(+:pointsPerClassLocal[:K],auxCentroidsLocal[:K*samples]) num_threads(NUM_THREADS)
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++) {
-			class=classMap[i];
-			#pragma omp atomic
+			class=classMaplocal[i-rank*linesPerProcess];
 			pointsPerClassLocal[class-1] += 1;
 			for(j=0; j<samples; j++){
-				#pragma omp atomic
 				auxCentroidsLocal[(class-1)*samples+j] += data[i*samples+j];
 			}
 		}
@@ -420,39 +404,37 @@ int main(int argc, char* argv[])
 		int start = rank*centroidPerProcess;
 		int end = (rank+1)*centroidPerProcess;
 
-        #pragma omp parallel for private(i,j) shared(auxCentroids)
-		for(i=start; i<end; i++) {
+        #pragma omp parallel for private(i,j) shared(auxCentroids, pointsPerClass) num_threads(NUM_THREADS)
+		for(i=start; i<end; i++) { // non si può parallelizzare perché se do x centroidi a un processo perché 
 			for(j=0; j<samples; j++){
 				auxCentroids[i*samples+j] /= pointsPerClass[i];
 			}
 		}
 		
-		maxDist=FLT_MIN;
+		//maxDist=FLT_MIN;
 		float maxDistLocal = FLT_MIN;
-        #pragma omp parallel for private(i) reduction(max:maxDistLocal)
-		for(i=rank*centroidPerProcess; i<(rank+1)*centroidPerProcess; i++){
+        #pragma omp parallel for private(i) reduction(max:maxDistLocal) num_threads(NUM_THREADS)
+		for(i=start; i<end; i++){ //non si potrebbe parallelizzare con mpi 
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
 			if(distCentroids[i]>maxDistLocal) {
 				maxDistLocal=distCentroids[i];
 			}
 		}
 
-		MPI_Reduce(&maxDistLocal, &maxDist, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD);
+		MPI_Allreduce(&maxDistLocal, &maxDist, 1, MPI_FLOAT, MPI_MAX, MPI_COMM_WORLD);
 		
 		//sembra funzionare più velocemente con allGather
-		MPI_Allgather(MPI_IN_PLACE, centroidPerProcess * samples, MPI_FLOAT, auxCentroids, centroidPerProcess * samples, MPI_FLOAT, MPI_COMM_WORLD);
+		//MPI_Allgather(MPI_IN_PLACE, centroidPerProcess * samples, MPI_FLOAT, auxCentroids, centroidPerProcess * samples, MPI_FLOAT, MPI_COMM_WORLD);
 		//MPI_Gather(auxCentroids + start * samples, centroidPerProcess * samples, MPI_FLOAT, auxCentroids, centroidPerProcess * samples, MPI_FLOAT, 0, MPI_COMM_WORLD);
 		
-		if(rank == 0){
-			memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
-			sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-			outputMsg = strcat(outputMsg,line);
-			global_continue = (changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold);
-		}
-		MPI_Bcast(centroids, K*samples, MPI_FLOAT, 0, MPI_COMM_WORLD);
-		MPI_Bcast(&global_continue, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	} while(global_continue);
-	//MPI_Barrier(MPI_COMM_WORLD);
+		memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
+		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
+		outputMsg = strcat(outputMsg,line);
+
+		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
+	} while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+
+	//MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 	free(pointsPerClassLocal);
 	free(auxCentroidsLocal);
 	free(classMaplocal);

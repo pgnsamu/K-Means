@@ -9,3 +9,7 @@ MPI
 mpirun -np 4 ./KMEANS_mpi test_files/input100D2.inp 8 100 0.01 0.001 output2D2.inp
 
 nvcc --fmad=false KMEANS_cuda.cu -o KMEANS_cuda
+
+condor_submit job/job/seq.job -append 'executable = ./KMEANS_seq' -append 'arguments = test_files/input100D2.inp 8 100 0.01 0.001 output2D2.inp'
+
+

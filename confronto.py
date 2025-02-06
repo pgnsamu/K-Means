@@ -46,7 +46,8 @@ def main():
     file_riferimento = "./output2D.inp"
     file_generato = "./output2D2.inp"
     comando_omp = "./KMEANS_omp test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
-    comando_mpi = "mpirun -np 4 ./KMEANS_mpi_omp test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
+    comando_mpi = "mpirun -np 4 ./KMEANS_mpi test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
+    comando_omp_mpi = "mpirun -np 4 ./KMEANS_mpi_omp test_files/input100D2.inp 1000 3 50 0.01 output2D.inp"
 
     # File di log per i tempi di esecuzione
     file_tempi = "tempi_esecuzione.txt"
@@ -63,7 +64,7 @@ def main():
             start_time = time.time()
             
             # Esegui il programma MPI e cattura l'output
-            output_programma = esegui_programma_mpi(comando_mpi)
+            output_programma = esegui_programma_mpi(comando_omp_mpi)
             if output_programma is None:
                 print(f"Errore nell'esecuzione del programma MPI alla iterazione {i+1}.")
                 break
