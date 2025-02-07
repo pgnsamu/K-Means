@@ -176,13 +176,12 @@ Funzione euclideanDistance: calcola la distanza euclidea tra un punto ed un cent
 */
 float euclideanDistance(float *point, float *center, int samples)
 {
-	float dist=0.0;
-	for(int i=0; i<samples; i++) 
-	{
-		dist += (point[i]-center[i])*(point[i]-center[i]);
-	}
-	dist = sqrt(dist);
-	return(dist);
+	float dist2 = 0.0;
+    for(int i = 0; i < samples; i++){
+        float diff = point[i] - center[i];
+        dist2 += diff * diff;
+    }
+    return dist2;
 }
 
 /*
@@ -191,6 +190,7 @@ Funzione zeroFloatMatriz: inizializza tutti gli elementi della matrice a zero.
 void zeroFloatMatriz(float *matrix, int rows, int columns)
 {
 	int i,j;
+	#pragma omp parallel for private(i,j) collapse(2)
 	for (i=0; i<rows; i++)
 		for (j=0; j<columns; j++)
 			matrix[i*columns+j] = 0.0;	
@@ -419,7 +419,7 @@ int main(int argc, char* argv[])
 
 		// Raccoglie i risultati locali dei cluster assegnati da ciascun processo
 		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
-	} while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+	} while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold*maxThreshold));
 
 	// Liberazione delle variabili locali allocate per ogni processo
 	free(pointsPerClassLocal);

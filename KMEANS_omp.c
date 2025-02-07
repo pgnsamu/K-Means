@@ -325,17 +325,18 @@ int main(int argc, char* argv[])
 		// 2. Calcolo dei nuovi centroidi: media dei punti appartenenti ad ogni cluster
 		zeroIntArray(pointsPerClass, K);
 		zeroFloatMatriz(auxCentroids, K, samples);
-
+		
+		// diviso in due cicli per la riduzione
 		#pragma omp parallel for reduction(+:pointsPerClass[:K])
 		for (int i = 0; i < lines; i++) {
-			int class = classMap[i] - 1;
+			class = classMap[i] - 1;
 			pointsPerClass[class]++;
 		}
 
 		#pragma omp parallel for collapse(2) reduction(+:auxCentroids[:K*samples])
 		for (int i = 0; i < lines; i++) {
 			for (int j = 0; j < samples; j++) {
-				int class = classMap[i] - 1;
+				class = classMap[i] - 1;
 				auxCentroids[class * samples + j] += data[i * samples + j];
 			}
 		}
