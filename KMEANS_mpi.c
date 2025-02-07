@@ -339,7 +339,9 @@ int main(int argc, char* argv[])
 	int *pointsPerClassLocal = (int*)calloc(K,sizeof(int));
 	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
 	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
-
+	for(int y = 0; y < linesPerProcess; y++){
+		classMaplocal[y] = 0;
+	}
 	// Ciclo iterativo del k-Means
 	do{
 		it++;
@@ -347,9 +349,7 @@ int main(int argc, char* argv[])
 		// 1. CLASSIFICAZIONE: assegna ogni punto al centroide più vicino
 		changes = 0;
 		// Inizializza la mappa locale delle classi
-		for(int y = 0; y < linesPerProcess; y++){
-			classMaplocal[y] = 0;
-		}
+
 		int changesLocal = 0;
 		for(int i = rank * linesPerProcess; i < (rank + 1) * linesPerProcess; i++){
 			class = 1;
@@ -363,7 +363,7 @@ int main(int argc, char* argv[])
 				}
 			}
 			// Conta i cambiamenti rispetto alla precedente assegnazione
-			if(classMap[i] != class){
+			if(classMaplocal[i - rank*linesPerProcess] != class){
 				changesLocal++;
 			}
 			classMaplocal[i - rank*linesPerProcess] = class;
@@ -428,8 +428,10 @@ int main(int argc, char* argv[])
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
 
-		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
+		//MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 	} while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+
+	MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 
 	// Liberazione della memoria locale per MPI
 	free(pointsPerClassLocal);

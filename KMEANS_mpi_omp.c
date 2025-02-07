@@ -348,14 +348,15 @@ int main(int argc, char* argv[])
 	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
 	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
 	// omp_set_num_threads(4); non lo devi fare 
+	for(int y=0;y<linesPerProcess;y++){
+		classMaplocal[y] = 0;
+	}
+	
 	do{
 		it++;
 		//1. Calculate the distance from each point to the centroid
 		//Assign each point to the nearest centroid.
 		changes = 0;
-		for(int y=0;y<linesPerProcess;y++){
-			classMaplocal[y] = 0;
-		}
 		int changesLocal = 0;
 		#pragma omp parallel for private (i, j, class, minDist, dist) reduction(+:changesLocal) num_threads(NUM_THREADS)
 		for(i=rank*linesPerProcess; i<(rank+1)*linesPerProcess; i++){
@@ -368,7 +369,7 @@ int main(int argc, char* argv[])
 					class=j+1;
 				}
 			}
-			if(classMap[i]!=class){
+			if(classMaplocal[i-rank*linesPerProcess]!=class){
 				changesLocal++;
 			}
 			classMaplocal[i-rank*linesPerProcess]=class;
@@ -435,8 +436,9 @@ int main(int argc, char* argv[])
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
 
-		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 	} while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+	
+	MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 
 	//MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 	free(pointsPerClassLocal);
