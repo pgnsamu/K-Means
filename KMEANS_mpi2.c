@@ -339,10 +339,12 @@ int main(int argc, char* argv[])
 	int *pointsPerClassLocal = (int*)calloc(K,sizeof(int));
 	float *auxCentroidsLocal = (float*)calloc(K*samples,sizeof(float));	
 	int *classMaplocal = (int*)calloc(linesPerProcess,sizeof(int));
+	int global_continue;
 
 	// Ciclo iterativo del k-Means
 	do{
 		it++;
+		global_continue = 0;
 
 		// 1. CLASSIFICAZIONE: assegna ogni punto al centroide più vicino
 		changes = 0;
@@ -370,8 +372,9 @@ int main(int argc, char* argv[])
 		}
 
 		// Riduzione degli errori/cambiamenti a livello globale
-		MPI_Allreduce(&changesLocal, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+		MPI_Reduce(&changesLocal, &changes, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 		// Raccolta di tutte le assegnazioni nei processi
+		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
 
 		// Visualizzazione temporanea su file commented out
 		/*
@@ -379,15 +382,17 @@ int main(int argc, char* argv[])
 		*/
 
 		// Azzeramento dei contatori per la somma dei centroidi
-		zeroIntArray(pointsPerClass,K);
-		zeroFloatMatriz(auxCentroids,K,samples);
+		if(rank == 0){
+			zeroIntArray(pointsPerClass,K);
+			zeroFloatMatriz(auxCentroids,K,samples);
+		}
 		zeroIntArray(pointsPerClassLocal,K);
 		zeroFloatMatriz(auxCentroidsLocal,K,samples);
 
 		// 2. CALCOLO DEI NUOVI CENTROIDI:
 		// Somma i punti per cluster in maniera locale
 		for(int i = rank*linesPerProcess; i < (rank+1)*linesPerProcess; i++) {
-			class = classMaplocal[i-rank*linesPerProcess];
+			class = classMap[i];
 			pointsPerClassLocal[class - 1] += 1;
 			for(j = 0; j < samples; j++){
 				auxCentroidsLocal[(class - 1)*samples + j] += data[i*samples+j];
@@ -399,8 +404,10 @@ int main(int argc, char* argv[])
 		MPI_Allreduce(auxCentroidsLocal, auxCentroids, K*samples, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
 
 		// Ogni processo aggiorna i centroidi a lui assegnati
-		for(int i = 0; i < K; i++) {
-			for(int j = 0; j < samples; j++){
+		int start = rank * centroidPerProcess;
+		int end = (rank + 1) * centroidPerProcess;
+		for(int i = start; i < end; i++) {
+			for(j = 0; j < samples; j++){
 				auxCentroids[i*samples+j] /= pointsPerClass[i];
 			}
 		}
@@ -408,7 +415,7 @@ int main(int argc, char* argv[])
 		// Calcolo della distanza tra vecchi e nuovi centroidi
 		maxDist = FLT_MIN;
 		float maxDistLocal = FLT_MIN;
-		for(int i = 0; i < K; i++){
+		for(int i = rank * centroidPerProcess; i < (rank+1) * centroidPerProcess; i++){
 			distCentroids[i] = euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
 			if(distCentroids[i] > maxDistLocal) {
 				maxDistLocal = distCentroids[i];
@@ -416,20 +423,24 @@ int main(int argc, char* argv[])
 		}
 
 		// Riduzione per trovare la massima distanza a livello globale
-		MPI_Allreduce(&maxDistLocal, &maxDist, 1, MPI_FLOAT, MPI_MAX, MPI_COMM_WORLD);
+		MPI_Reduce(&maxDistLocal, &maxDist, 1, MPI_FLOAT, MPI_MAX, 0, MPI_COMM_WORLD);
 		
+		// Raccolta e condivisione dei nuovi centroidi fra i processi
+		MPI_Allgather(MPI_IN_PLACE, centroidPerProcess * samples, MPI_FLOAT, auxCentroids, centroidPerProcess * samples, MPI_FLOAT, MPI_COMM_WORLD);
 		
-		
-		//sembra funzionare più velocemente con allGather
-		//MPI_Allgather(MPI_IN_PLACE, centroidPerProcess * samples, MPI_FLOAT, auxCentroids, centroidPerProcess * samples, MPI_FLOAT, MPI_COMM_WORLD);
-		//MPI_Gather(auxCentroids + start * samples, centroidPerProcess * samples, MPI_FLOAT, auxCentroids, centroidPerProcess * samples, MPI_FLOAT, 0, MPI_COMM_WORLD);
-		
-		memcpy(centroids, auxCentroids, (K*samples*sizeof(float))); //copia in centroids <- auxcentroids
-		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-		outputMsg = strcat(outputMsg,line);
-
-		MPI_Allgather(classMaplocal, linesPerProcess, MPI_INT, classMap, linesPerProcess, MPI_INT, MPI_COMM_WORLD);
-	} while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+		if(rank == 0){
+			// Aggiorna globalmente i centroidi
+			memcpy(centroids, auxCentroids, (K*samples*sizeof(float)));
+			// Aggiorna il messaggio di output con statistiche dell'iterazione
+			sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
+			outputMsg = strcat(outputMsg,line);
+			// Definisce la condizione di continuazione
+			global_continue = (changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold);
+		}
+		// Broadcast dei nuovi centroidi e della condizione di continuazione agli altri processi
+		MPI_Bcast(centroids, K*samples, MPI_FLOAT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&global_continue, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	} while(global_continue);
 
 	// Liberazione della memoria locale per MPI
 	free(pointsPerClassLocal);

@@ -37,6 +37,8 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
                         file_path = os.path.join(logs_path, file)
                         values = extract_computation_number(file_path)
                         if values:
+                            if len(values)>1:
+                                values = [max(values)]
                             computation_values.extend(values)
                             log_entries.extend([[file, v] for v in values])  # Salva file e valore
 
@@ -79,5 +81,7 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "omp"  # Cambia il percorso se necessario
+seq_directory = "mpi"  # Cambia il percorso se necessario
+#for subdir in os.listdir("."):
+    #print(subdir)
 process_logs_in_seq(seq_directory)
