@@ -12,10 +12,15 @@ def extract_computation_number(file_path):
                 values.append(float(match.group(1)))  # Converte in float
     return values  # Restituisce una lista di valori trovati
 
+def extract_first_number(text):
+    """Estrae il primo numero presente in una stringa per ordinamento"""
+    match = re.search(r"\d+", text)
+    return int(match.group()) if match else float('inf')
+
 def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
     """Scansiona seq/, cerca le cartelle logs/ e calcola la media per ogni sottocartella, salvando i dati in CSV distinti"""
 
-    results = []  # Lista per salvare le medie generali
+    results = {}  # Dizionario per salvare le medie generali
 
     for subdir in os.listdir(seq_directory):  # Scorre le cartelle in seq/
         subdir_path = os.path.join(seq_directory, subdir)
@@ -47,29 +52,25 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
                 # Calcola la media se ci sono valori
                 if computation_values:
                     mean_value = sum(computation_values) / len(computation_values)
-                    results.append([subdir, mean_value])
+                    row_key = subdir.split('_')[-1]  # Ultimo elemento per la riga
+                    col_key = subdir.split('_')[0]  # Primo elemento per la colonna
+                    if row_key not in results:
+                        results[row_key] = {}
+                    results[row_key][col_key] = mean_value
                     print(f"Cartella '{subdir}': Media Computation = {mean_value:.2f}")
                 else:
                     print(f"Cartella '{subdir}': Nessun valore trovato nei file .out")
 
-    # Salva le medie generali in un file CSV
+    # Creazione della tabella delle medie
     if results:
-        # Estrai i nomi delle colonne e delle righe dai risultati
-        rows = sorted(set(subdir.split('_')[-1] for subdir, _ in results), key=int)
-        columns = sorted(set(subdir.split('_')[0] for subdir, _ in results), key=int)
+        rows = sorted(results.keys(), key=extract_first_number)
+        columns = sorted(set(col for row in results.values() for col in row.keys()), key=extract_first_number)
         
         # Crea una tabella vuota con intestazioni
         table = [[""] + columns]
         for row in rows:
-            table.append([row] + [""] * len(columns))
-
-        # Riempie la tabella con i valori medi
-        for subdir, mean_value in results:
-            col_key = subdir.split('_')[0]  # Primo elemento per la colonna
-            row_key = subdir.split('_')[-1]  # Ultimo elemento per la riga
-            row_index = rows.index(row_key) + 1
-            col_index = columns.index(col_key) + 1
-            table[row_index][col_index] = mean_value
+            row_data = [row] + [results[row].get(col, "") for col in columns]
+            table.append(row_data)
 
         # Salva la tabella in un file CSV
         with open(output_csv, mode="w", newline="") as csv_file:
@@ -78,5 +79,5 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "seq"  # Cambia il percorso se necessario
+seq_directory = "omp"  # Cambia il percorso se necessario
 process_logs_in_seq(seq_directory)

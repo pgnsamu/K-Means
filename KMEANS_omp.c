@@ -156,9 +156,9 @@ float euclideanDistance(float *point, float *center, int samples)
 	float dist=0.0;
 	for(int i=0; i<samples; i++) 
 	{
-		dist+= (point[i]-center[i])*(point[i]-center[i]);
+		float diff = point[i] - center[i];
+        dist += diff * diff;
 	}
-	dist = sqrt(dist);
 	return(dist);
 }
 
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 
 		// 1. Assegnamento: per ogni punto calcola la distanza euclidea da ognuno dei centroidi
 		changes = 0; 	
-		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) schedule(dynamic)
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) 
 		for(i=0; i<lines; i++){
 			class = 1;          // Valore predefinito per il cluster
 			minDist = FLT_MAX;  // Inizializza con il massimo valore possibile
@@ -325,16 +325,21 @@ int main(int argc, char* argv[])
 		// 2. Calcolo dei nuovi centroidi: media dei punti appartenenti ad ogni cluster
 		zeroIntArray(pointsPerClass, K);
 		zeroFloatMatriz(auxCentroids, K, samples);
-		
-		#pragma omp parallel for private(i,class,j) shared(auxCentroids) reduction(+:pointsPerClass[:K]) 
-		for(i=0; i<lines; i++) {
-			class = classMap[i];
-			pointsPerClass[class-1] += 1;  // Conta i punti per cluster
-			for(j=0; j<samples; j++){
-				#pragma omp atomic
-				auxCentroids[(class-1)*samples+j] += data[i*samples+j];
-			} 
+
+		#pragma omp parallel for reduction(+:pointsPerClass[:K])
+		for (int i = 0; i < lines; i++) {
+			int class = classMap[i] - 1;
+			pointsPerClass[class]++;
 		}
+
+		#pragma omp parallel for collapse(2) reduction(+:auxCentroids[:K*samples])
+		for (int i = 0; i < lines; i++) {
+			for (int j = 0; j < samples; j++) {
+				int class = classMap[i] - 1;
+				auxCentroids[class * samples + j] += data[i * samples + j];
+			}
+		}
+
 
 		// Media: divide la sommatoria delle coordinate per il numero di punti per ogni cluster
 		for(i=0; i<K; i++) {
@@ -359,7 +364,7 @@ int main(int argc, char* argv[])
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 		outputMsg = strcat(outputMsg,line); 
 
-	} while ((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+	} while ((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold*maxThreshold));
 	
 	// Stampa sintesi delle condizioni di terminazione
 	printf("%s", outputMsg);
