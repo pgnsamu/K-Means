@@ -395,7 +395,6 @@ int main(int argc, char* argv[])
 		// Dividi la somma per il numero di punti per calcolare la media (nuovo centroide)
 		int start = rank * centroidPerProcess;
 		int end = (rank + 1) * centroidPerProcess;
-		#pragma omp parallel for private(i, j) shared(auxCentroids, pointsPerClass) num_threads(NUM_THREADS)
 		for(i = start; i < end; i++) {
 			for(j = 0; j < samples; j++){
 				auxCentroids[i * samples + j] /= pointsPerClass[i];
@@ -404,7 +403,6 @@ int main(int argc, char* argv[])
 		
 		// Calcolo della distanza tra i centroidi vecchi ed aggiornati per verificare il criterio di convergenza
 		float maxDistLocal = FLT_MIN;
-		#pragma omp parallel for private(i) reduction(max:maxDistLocal) num_threads(NUM_THREADS)
 		for(i = start; i < end; i++){
 			distCentroids[i] = euclideanDistance(&centroids[i * samples], &auxCentroids[i * samples], samples);
 			if(distCentroids[i] > maxDistLocal) {
