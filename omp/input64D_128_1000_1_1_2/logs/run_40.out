@@ -1,0 +1,44 @@
+
+	Data file: test_files/input64D.inp 
+	Points: 50000
+	Dimensions: 64
+	Number of clusters: 128
+	Maximum number of iterations: 1000
+	Minimum number of changes: 500 [1% of 50000 points]
+	Maximum centroid precision: 1.000000
+
+Memory allocation: 0.353354 seconds
+
+[1] Cluster changes: 50000	Max. centroid distance: 112354.968750
+[2] Cluster changes: 17064	Max. centroid distance: 4471.066406
+[3] Cluster changes: 7381	Max. centroid distance: 969.666260
+[4] Cluster changes: 5042	Max. centroid distance: 440.716980
+[5] Cluster changes: 3903	Max. centroid distance: 258.705658
+[6] Cluster changes: 3237	Max. centroid distance: 244.512909
+[7] Cluster changes: 2668	Max. centroid distance: 168.962189
+[8] Cluster changes: 2316	Max. centroid distance: 150.372391
+[9] Cluster changes: 2045	Max. centroid distance: 131.311859
+[10] Cluster changes: 1765	Max. centroid distance: 116.918892
+[11] Cluster changes: 1525	Max. centroid distance: 114.063370
+[12] Cluster changes: 1393	Max. centroid distance: 85.630745
+[13] Cluster changes: 1222	Max. centroid distance: 109.363297
+[14] Cluster changes: 1063	Max. centroid distance: 78.792892
+[15] Cluster changes: 947	Max. centroid distance: 49.979637
+[16] Cluster changes: 857	Max. centroid distance: 57.380733
+[17] Cluster changes: 831	Max. centroid distance: 60.210121
+[18] Cluster changes: 741	Max. centroid distance: 53.118221
+[19] Cluster changes: 670	Max. centroid distance: 54.946098
+[20] Cluster changes: 633	Max. centroid distance: 36.501598
+[21] Cluster changes: 589	Max. centroid distance: 48.351360
+[22] Cluster changes: 586	Max. centroid distance: 44.819927
+[23] Cluster changes: 595	Max. centroid distance: 44.044907
+[24] Cluster changes: 557	Max. centroid distance: 41.384407
+[25] Cluster changes: 535	Max. centroid distance: 71.350410
+[26] Cluster changes: 521	Max. centroid distance: 38.258141
+[27] Cluster changes: 486	Max. centroid distance: 35.353416
+Computation: 4.006224 seconds
+
+Termination condition:
+Minimum number of changes reached: 486 [500]
+
+Memory deallocation: 4.104476 seconds

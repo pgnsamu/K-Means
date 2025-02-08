@@ -1,0 +1,37 @@
+
+	Data file: test_files/input4D.inp 
+	Points: 50000
+	Dimensions: 4
+	Number of clusters: 128
+	Maximum number of iterations: 1000
+	Minimum number of changes: 500 [1% of 50000 points]
+	Maximum centroid precision: 1.000000
+
+Memory allocation: 0.026045 seconds
+
+[1] Cluster changes: 50000	Max. centroid distance: 1176.513184
+[2] Cluster changes: 9490	Max. centroid distance: 213.184128
+[3] Cluster changes: 4876	Max. centroid distance: 70.819427
+[4] Cluster changes: 3249	Max. centroid distance: 63.580872
+[5] Cluster changes: 2559	Max. centroid distance: 57.368591
+[6] Cluster changes: 2009	Max. centroid distance: 34.539936
+[7] Cluster changes: 1657	Max. centroid distance: 25.608200
+[8] Cluster changes: 1506	Max. centroid distance: 17.283611
+[9] Cluster changes: 1326	Max. centroid distance: 15.662757
+[10] Cluster changes: 1166	Max. centroid distance: 13.544210
+[11] Cluster changes: 1039	Max. centroid distance: 12.820366
+[12] Cluster changes: 986	Max. centroid distance: 9.723990
+[13] Cluster changes: 947	Max. centroid distance: 17.495230
+[14] Cluster changes: 838	Max. centroid distance: 18.068560
+[15] Cluster changes: 736	Max. centroid distance: 13.027430
+[16] Cluster changes: 674	Max. centroid distance: 6.893671
+[17] Cluster changes: 604	Max. centroid distance: 7.225127
+[18] Cluster changes: 552	Max. centroid distance: 8.879586
+[19] Cluster changes: 533	Max. centroid distance: 7.294097
+[20] Cluster changes: 456	Max. centroid distance: 3.928870
+Computation: 0.109610 seconds
+
+Termination condition:
+Minimum number of changes reached: 456 [500]
+
+Memory deallocation: 0.197727 seconds
