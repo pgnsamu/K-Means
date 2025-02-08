@@ -423,6 +423,20 @@ int main(int argc, char* argv[]){
 		exit(-4);
 	}
 
+	
+	// Allocazione memoria device per dati, centroidi e mappa delle classi
+	float *d_data, *d_centroids;
+	int *d_classMap;
+	CHECK_CUDA_CALL(cudaMalloc((void**)&d_data, lines * samples * sizeof(float)));
+	CHECK_CUDA_CALL(cudaMalloc((void**)&d_centroids, K * samples * sizeof(float)));
+	CHECK_CUDA_CALL(cudaMalloc((void**)&d_classMap, lines * sizeof(int)));
+
+	
+	// Copia dei dati dalla CPU alla memoria device
+	CHECK_CUDA_CALL(cudaMemcpy(d_data, data, lines * samples * sizeof(float), cudaMemcpyHostToDevice));
+	CHECK_CUDA_CALL(cudaMemcpy(d_centroids, centroids, K * samples * sizeof(float), cudaMemcpyHostToDevice));
+	CHECK_CUDA_CALL(cudaMemcpy(d_classMap, classMap, lines * sizeof(int), cudaMemcpyHostToDevice));
+
 	// Ciclo iterativo: esegue aggiornamento dei cluster finché non si raggiunge la convergenza
 	int h_changes;
 	do{
@@ -432,20 +446,11 @@ int main(int argc, char* argv[]){
 		CHECK_CUDA_CALL(cudaMemcpyToSymbol(d_changes, &h_changes, sizeof(int), 0, cudaMemcpyHostToDevice));
 
 		// Definizione del grid e block size per i kernel CUDA
-		int blockSize = 1024;
+		int blockSize = 256;
 		int numBlocks = (lines + blockSize - 1) / blockSize;
 
-		// Allocazione memoria device per dati, centroidi e mappa delle classi
-		float *d_data, *d_centroids;
-		int *d_classMap;
-		CHECK_CUDA_CALL(cudaMalloc((void**)&d_data, lines * samples * sizeof(float)));
-		CHECK_CUDA_CALL(cudaMalloc((void**)&d_centroids, K * samples * sizeof(float)));
-		CHECK_CUDA_CALL(cudaMalloc((void**)&d_classMap, lines * sizeof(int)));
-
 		// Copia dei dati dalla CPU alla memoria device
-		CHECK_CUDA_CALL(cudaMemcpy(d_data, data, lines * samples * sizeof(float), cudaMemcpyHostToDevice));
-		CHECK_CUDA_CALL(cudaMemcpy(d_centroids, centroids, K * samples * sizeof(float), cudaMemcpyHostToDevice));
-		CHECK_CUDA_CALL(cudaMemcpy(d_classMap, classMap, lines * sizeof(int), cudaMemcpyHostToDevice));
+		CHECK_CUDA_CALL(cudaMemcpy(d_centroids, centroids, K * samples * sizeof(float), cudaMemcpyHostToDevice)); 
 
 		// Allocazione memoria condivisa per il kernel ed esecuzione kernel per assegnazione dei punti
 		size_t sharedMemSize = K * samples * sizeof(float);
@@ -454,7 +459,6 @@ int main(int argc, char* argv[]){
 		
 		// Recupero del numero di cambiamenti dall'ambiente device
 		CHECK_CUDA_CALL(cudaMemcpyFromSymbol(&h_changes, d_changes, sizeof(int), 0, cudaMemcpyDeviceToHost));
-		CHECK_CUDA_CALL(cudaMemcpy(classMap, d_classMap, lines * sizeof(int), cudaMemcpyDeviceToHost));
 
 		// Ricalcolo dei centroidi: inizializza vettori ausiliari
 		zeroIntArray(pointsPerClass, K);
@@ -473,7 +477,7 @@ int main(int argc, char* argv[]){
 		CHECK_CUDA_CALL(cudaDeviceSynchronize());
 		
 		// Aggiornamento del numero di thread per aggiornare i centroidi
-		blockSize = 256;
+		blockSize = 64;
 		numBlocks = (K + blockSize - 1) / blockSize;
 		updateCentroids<<<numBlocks, blockSize>>>(d_auxCentroids, d_pointsPerClass, samples, K);
 		CHECK_CUDA_CALL(cudaDeviceSynchronize());
@@ -496,14 +500,18 @@ int main(int argc, char* argv[]){
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, h_changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
 		
-		// Libera la memoria device allocata per questa iterazione
-		CHECK_CUDA_CALL(cudaFree(d_data));
-		CHECK_CUDA_CALL(cudaFree(d_centroids));
-		CHECK_CUDA_CALL(cudaFree(d_classMap));
+
 		CHECK_CUDA_CALL(cudaFree(d_pointsPerClass));
 		CHECK_CUDA_CALL(cudaFree(d_auxCentroids));
 
 	} while((h_changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+
+	CHECK_CUDA_CALL(cudaMemcpy(d_classMap, classMap, lines * sizeof(int), cudaMemcpyHostToDevice));
+
+	// Libera la memoria device allocata per questa iterazione
+	CHECK_CUDA_CALL(cudaFree(d_data));
+	CHECK_CUDA_CALL(cudaFree(d_centroids));
+	CHECK_CUDA_CALL(cudaFree(d_classMap));
 
 	// Stampa delle condizioni di terminazione e risultati
 	printf("%s", outputMsg);	
