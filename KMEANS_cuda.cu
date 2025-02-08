@@ -309,6 +309,7 @@ __device__ float atomicMaxFloat(float* address, float val) {
  */
 __global__
 void calculateMaxDist(float *centroids, float *auxCentroids, float *distCentroids, int samples, int K){
+	d_maxDist = FLT_MIN;
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i<K){
 		distCentroids[i] = euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
@@ -437,6 +438,18 @@ int main(int argc, char* argv[]){
 	CHECK_CUDA_CALL(cudaMemcpy(d_centroids, centroids, K * samples * sizeof(float), cudaMemcpyHostToDevice));
 	CHECK_CUDA_CALL(cudaMemcpy(d_classMap, classMap, lines * sizeof(int), cudaMemcpyHostToDevice));
 
+	// Allocazione su device per il ricalcolo dei centroidi
+	int *d_pointsPerClass;
+	float *d_auxCentroids;
+	CHECK_CUDA_CALL(cudaMalloc((void**)&d_pointsPerClass, K * sizeof(int)));
+	CHECK_CUDA_CALL(cudaMalloc((void**)&d_auxCentroids, K * samples * sizeof(float)));
+	CHECK_CUDA_CALL(cudaMemcpy(d_pointsPerClass, pointsPerClass, K * sizeof(int), cudaMemcpyHostToDevice));
+	CHECK_CUDA_CALL(cudaMemcpy(d_auxCentroids, auxCentroids, K * samples * sizeof(float), cudaMemcpyHostToDevice));
+
+	float *d_distCentroids;
+	CHECK_CUDA_CALL(cudaMalloc((void**)&d_distCentroids, K * sizeof(float)));
+	CHECK_CUDA_CALL(cudaMemcpy(d_distCentroids, distCentroids, K * sizeof(float), cudaMemcpyHostToDevice));
+
 	// Ciclo iterativo: esegue aggiornamento dei cluster finché non si raggiunge la convergenza
 	int h_changes;
 	do{
@@ -464,14 +477,9 @@ int main(int argc, char* argv[]){
 		zeroIntArray(pointsPerClass, K);
 		zeroFloatMatriz(auxCentroids, K, samples);
 		
-		// Allocazione su device per il ricalcolo dei centroidi
-		int *d_pointsPerClass;
-		float *d_auxCentroids;
-		CHECK_CUDA_CALL(cudaMalloc((void**)&d_pointsPerClass, K * sizeof(int)));
-		CHECK_CUDA_CALL(cudaMalloc((void**)&d_auxCentroids, K * samples * sizeof(float)));
 		CHECK_CUDA_CALL(cudaMemcpy(d_pointsPerClass, pointsPerClass, K * sizeof(int), cudaMemcpyHostToDevice));
 		CHECK_CUDA_CALL(cudaMemcpy(d_auxCentroids, auxCentroids, K * samples * sizeof(float), cudaMemcpyHostToDevice));
-
+		
 		// Kernel per accumulare le somme per ogni centroide
 		recalculatesCentroids<<<numBlocks, blockSize>>>(d_data, d_classMap, lines, samples, K, d_auxCentroids, d_pointsPerClass);
 		CHECK_CUDA_CALL(cudaDeviceSynchronize());
@@ -484,26 +492,17 @@ int main(int argc, char* argv[]){
 
 		// Calcolo della distanza massima tra i centroidi vecchi e quelli aggiornati
 		maxDist = FLT_MIN; 
-		CHECK_CUDA_CALL(cudaMemcpyToSymbol(d_maxDist, &maxDist, sizeof(float), 0, cudaMemcpyHostToDevice));
-		float *d_distCentroids;
-		CHECK_CUDA_CALL(cudaMalloc((void**)&d_distCentroids, K * sizeof(float)));
-		CHECK_CUDA_CALL(cudaMemcpy(d_distCentroids, distCentroids, K * sizeof(float), cudaMemcpyHostToDevice));
-
 		calculateMaxDist<<<numBlocks, blockSize>>>(d_centroids, d_auxCentroids, d_distCentroids, samples, K);
 		CHECK_CUDA_CALL(cudaDeviceSynchronize());
 		CHECK_CUDA_CALL(cudaMemcpyFromSymbol(&maxDist, d_maxDist, sizeof(float), 0, cudaMemcpyDeviceToHost)); 
 
 		// Aggiorna i centroidi per il prossimo ciclo iterativo
-		CHECK_CUDA_CALL(cudaMemcpy(auxCentroids, d_auxCentroids, K * samples * sizeof(float), cudaMemcpyDeviceToHost));
-		memcpy(centroids, auxCentroids, (K * samples * sizeof(float)));
+		CHECK_CUDA_CALL(cudaMemcpy(centroids, d_auxCentroids, K * samples * sizeof(float), cudaMemcpyDeviceToHost));
+		// memcpy(centroids, auxCentroids, (K * samples * sizeof(float)));
 		
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, h_changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
 		
-
-		CHECK_CUDA_CALL(cudaFree(d_pointsPerClass));
-		CHECK_CUDA_CALL(cudaFree(d_auxCentroids));
-
 	} while((h_changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
 
 	CHECK_CUDA_CALL(cudaMemcpy(d_classMap, classMap, lines * sizeof(int), cudaMemcpyHostToDevice));
@@ -512,6 +511,8 @@ int main(int argc, char* argv[]){
 	CHECK_CUDA_CALL(cudaFree(d_data));
 	CHECK_CUDA_CALL(cudaFree(d_centroids));
 	CHECK_CUDA_CALL(cudaFree(d_classMap));
+	CHECK_CUDA_CALL(cudaFree(d_pointsPerClass));
+	CHECK_CUDA_CALL(cudaFree(d_auxCentroids));
 
 	// Stampa delle condizioni di terminazione e risultati
 	printf("%s", outputMsg);	
