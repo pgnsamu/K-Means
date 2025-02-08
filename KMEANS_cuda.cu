@@ -498,8 +498,7 @@ int main(int argc, char* argv[]){
 
 		// Aggiorna i centroidi per il prossimo ciclo iterativo
 		CHECK_CUDA_CALL(cudaMemcpy(centroids, d_auxCentroids, K * samples * sizeof(float), cudaMemcpyDeviceToHost));
-		// memcpy(centroids, auxCentroids, (K * samples * sizeof(float)));
-		
+
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, h_changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
 		
@@ -507,7 +506,7 @@ int main(int argc, char* argv[]){
 
 	CHECK_CUDA_CALL(cudaMemcpy(d_classMap, classMap, lines * sizeof(int), cudaMemcpyHostToDevice));
 
-	// Libera la memoria device allocata per questa iterazione
+	// Libera la memoria device allocata
 	CHECK_CUDA_CALL(cudaFree(d_data));
 	CHECK_CUDA_CALL(cudaFree(d_centroids));
 	CHECK_CUDA_CALL(cudaFree(d_classMap));
