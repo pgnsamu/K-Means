@@ -209,7 +209,15 @@ void zeroIntArray(int *array, int size)
 int main(int argc, char* argv[])
 {
 	/* 0. Initialize MPI */
-	MPI_Init( &argc, &argv );
+	int provided;
+
+    // Inizializzazione MPI con supporto a MPI_THREAD_FUNNELED
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+
+    if (provided < MPI_THREAD_FUNNELED) {
+        printf("Errore: Il livello di supporto per il threading non è MPI_THREAD_FUNNELED!\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 	int rank;
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
