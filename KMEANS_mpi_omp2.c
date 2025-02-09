@@ -417,7 +417,7 @@ int main(int argc, char* argv[])
 		MPI_Allreduce(pointsPerClassLocal, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 		MPI_Allreduce(auxCentroidsLocal, auxCentroids, K*samples, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
 
-        
+        #pragma omp parallel for private(i,j) shared(auxCentroids, pointsPerClass) num_threads(NUM_THREADS)
 		for(i=0; i<K; i++) { // non si può parallelizzare perché se do x centroidi a un processo perché 
 			for(j=0; j<samples; j++){
 				auxCentroids[i*samples+j] /= pointsPerClass[i];
@@ -426,7 +426,7 @@ int main(int argc, char* argv[])
 		
 		//maxDist=FLT_MIN;
 		float maxDistLocal = FLT_MIN;
-        
+        #pragma omp parallel for private(i) reduction(max:maxDistLocal) num_threads(NUM_THREADS)
 		for(i=0; i<K; i++){ //non si potrebbe parallelizzare con mpi 
 			distCentroids[i]=euclideanDistance(&centroids[i*samples], &auxCentroids[i*samples], samples);
 			if(distCentroids[i]>maxDistLocal) {
