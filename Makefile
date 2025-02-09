@@ -9,7 +9,7 @@
 #
 
 # Compilers
-CC=gcc
+CC=gcc-14
 OMPFLAG=-fopenmp
 MPICC=mpicc
 CUDACC=nvcc

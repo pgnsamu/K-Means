@@ -221,29 +221,29 @@ void distanceCalculationForEachPoint(float *data, float *centroids, int *classMa
 	int tid = threadIdx.x;
 	int totalCentroidsElements = K * samples;
 	for (int idx = tid; idx < totalCentroidsElements; idx += blockDim.x) {
-		s_centroids[idx] = centroids[idx];
+		s_centroids[idx] = centroids[idx]; // Copia i centroidi nella memoria condivisa
 	}
 	__syncthreads();
 
 	// Calcola l'indice globale del punto corrente.
-	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	int i = blockIdx.x * blockDim.x + threadIdx.x;  // Calcola l'indice globale del thread
 	if (i < lines) {
-		int old_class = classMap[i];
+		int old_class = classMap[i]; // Ottiene la classe attuale del punto
 		float minDist = FLT_MAX;
-		int new_class = old_class;
-		float *point = &data[i * samples];
+		int new_class = old_class;   // Inizializza la nuova classe con la vecchia classe
+		float *point = &data[i * samples]; // Ottiene il puntatore al punto corrente
 
 		// Valuta la distanza per ciascun centroide
 		for (int j = 0; j < K; j++) {
 			float dist = 0.0f;
-			float *centroid = &s_centroids[j * samples];
+			float *centroid = &s_centroids[j * samples];  // Ottiene il puntatore al centroide corrente nella memoria condivisa
 			for (int k = 0; k < samples; k++) {
 				float diff = point[k] - centroid[k];
 				dist += diff * diff;
 			}
 			dist = sqrtf(dist);
 			if (dist < minDist) {
-				minDist = dist;
+				minDist = dist; // Aggiorna la distanza minima
 				new_class = j + 1;  // I cluster sono indicizzati da 1
 			}
 		}
