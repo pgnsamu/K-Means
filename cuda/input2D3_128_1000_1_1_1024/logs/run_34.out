@@ -1,0 +1,28 @@
+
+	Data file: test_files/input2D3.inp 
+	Points: 50000
+	Dimensions: 2
+	Number of clusters: 128
+	Maximum number of iterations: 1000
+	Minimum number of changes: 500 [1% of 50000 points]
+	Maximum centroid precision: 1.000000
+
+Memory allocation: 0.016350 seconds
+
+[1] Cluster changes: 50000	Max. centroid distance: 12.412799
+[2] Cluster changes: 8189	Max. centroid distance: 4.354136
+[3] Cluster changes: 4538	Max. centroid distance: 2.499170
+[4] Cluster changes: 3076	Max. centroid distance: 2.085641
+[5] Cluster changes: 2351	Max. centroid distance: 1.621406
+[6] Cluster changes: 1876	Max. centroid distance: 1.595431
+[7] Cluster changes: 1607	Max. centroid distance: 1.538162
+[8] Cluster changes: 1415	Max. centroid distance: 1.533959
+[9] Cluster changes: 1242	Max. centroid distance: 1.282759
+[10] Cluster changes: 1094	Max. centroid distance: 1.171322
+[11] Cluster changes: 931	Max. centroid distance: 0.975931
+Computation: 0.004640 seconds
+
+Termination condition:
+Centroid update precision reached: 0.975931 [1]
+
+Memory deallocation: 0.009872 seconds

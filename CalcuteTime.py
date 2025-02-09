@@ -81,7 +81,7 @@ def process_logs_in_seq(seq_directory, output_csv="medie.csv"):
         print(f"\nRisultati medi salvati in '{output_csv}'")
 
 # Esempio di utilizzo
-seq_directory = "mpi"  # Cambia il percorso se necessario
+seq_directory = "cuda1B"  # Cambia il percorso se necessario
 #for subdir in os.listdir("."):
     #print(subdir)
 process_logs_in_seq(seq_directory)

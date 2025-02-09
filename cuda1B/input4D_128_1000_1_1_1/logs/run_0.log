@@ -1,0 +1,82 @@
+000 (328083.000.000) 2025-02-09 15:48:57 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+001 (328083.000.000) 2025-02-09 16:11:19 Job executing on host: <192.168.0.120:9618?addrs=192.168.0.120-9618&alias=node120.di.rm1&noUDP&sock=startd_2096_4298>
+...
+006 (328083.000.000) 2025-02-09 16:11:20 Image size of job updated: 750
+	0  -  MemoryUsage of job (MB)
+	0  -  ResidentSetSize of job (KB)
+...
+005 (328083.000.000) 2025-02-09 16:11:20 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                64        64 
+	   Disk (KB)            :      750      750    455114 
+	   Gpus (Average)       :                 1         1 "GPU-e2f89d15"
+	   Memory (MB)          :        0        1       128 
+
+	Job terminated of its own accord at 2025-02-09T16:11:20Z with exit-code 0.
+...
+000 (328235.000.000) 2025-02-09 16:18:05 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+001 (328235.000.000) 2025-02-09 16:20:31 Job executing on host: <192.168.0.110:9618?addrs=192.168.0.110-9618&alias=node110.di.rm1&noUDP&sock=startd_2154_0b16>
+...
+006 (328235.000.000) 2025-02-09 16:20:31 Image size of job updated: 750
+	0  -  MemoryUsage of job (MB)
+	0  -  ResidentSetSize of job (KB)
+...
+005 (328235.000.000) 2025-02-09 16:20:31 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                64        64 
+	   Disk (KB)            :      750      750    468076 
+	   Gpus (Average)       :                 1         1 "GPU-3ad8f19c"
+	   Memory (MB)          :        0        1       128 
+
+	Job terminated of its own accord at 2025-02-09T16:20:31Z with exit-code 0.
+...
+000 (328272.000.000) 2025-02-09 16:23:27 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+001 (328272.000.000) 2025-02-09 16:23:35 Job executing on host: <192.168.0.110:9618?addrs=192.168.0.110-9618&alias=node110.di.rm1&noUDP&sock=startd_2154_0b16>
+...
+006 (328272.000.000) 2025-02-09 16:23:44 Image size of job updated: 28652
+	9  -  MemoryUsage of job (MB)
+	8324  -  ResidentSetSize of job (KB)
+...
+006 (328272.000.000) 2025-02-09 16:23:55 Image size of job updated: 5002108
+	9  -  MemoryUsage of job (MB)
+	8324  -  ResidentSetSize of job (KB)
+...
+005 (328272.000.000) 2025-02-09 16:23:55 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:19, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:19, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                64        64 
+	   Disk (KB)            :      750      750    468076 
+	   Gpus (Average)       :                 1         1 "GPU-3ad8f19c"
+	   Memory (MB)          :        9        1       128 
+
+	Job terminated of its own accord at 2025-02-09T16:23:55Z with exit-code 0.
+...

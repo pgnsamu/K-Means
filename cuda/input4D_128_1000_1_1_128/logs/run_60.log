@@ -1,0 +1,13 @@
+000 (322951.060.000) 2025-02-08 00:11:19 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+001 (322951.060.000) 2025-02-08 00:15:45 Job executing on host: <192.168.0.110:9618?addrs=192.168.0.110-9618&alias=node110.di.rm1&noUDP&sock=startd_2154_0b16>
+...
+007 (322951.060.000) 2025-02-08 00:15:45 Shadow exception!
+	Error from slot1_1@node110.di.rm1: Failed to execute '/home/stingaci_2047145/K-Means/KMEANS_cuda' with arguments test_files/input4D.inp 128 1000 1 1 cuda/input4D_128_1000_1_1_128/a_out.txt: (errno=13: 'Permission denied')
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+...
+012 (322951.060.000) 2025-02-08 00:15:45 Job was held.
+	Error from slot1_1@node110.di.rm1: Failed to execute '/home/stingaci_2047145/K-Means/KMEANS_cuda' with arguments test_files/input4D.inp 128 1000 1 1 cuda/input4D_128_1000_1_1_128/a_out.txt: (errno=13: 'Permission denied')
+	Code 6 Subcode 13
+...

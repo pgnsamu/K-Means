@@ -1,0 +1,57 @@
+000 (328162.000.000) 2025-02-09 15:58:24 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+001 (328162.000.000) 2025-02-09 16:12:32 Job executing on host: <192.168.0.120:9618?addrs=192.168.0.120-9618&alias=node120.di.rm1&noUDP&sock=startd_2096_4298>
+...
+006 (328162.000.000) 2025-02-09 16:12:40 Image size of job updated: 40420
+	20  -  MemoryUsage of job (MB)
+	20092  -  ResidentSetSize of job (KB)
+...
+005 (328162.000.000) 2025-02-09 16:12:40 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:08, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:08, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                64        64 
+	   Disk (KB)            :      750      750    455114 
+	   Gpus (Average)       :                 1         1 "GPU-e2f89d15"
+	   Memory (MB)          :       20        1       128 
+
+	Job terminated of its own accord at 2025-02-09T16:12:40Z with exit-code 0.
+...
+000 (328404.000.000) 2025-02-09 16:33:34 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+000 (328425.000.000) 2025-02-09 16:35:52 Job submitted from host: <192.168.0.102:9618?addrs=192.168.0.102-9618&alias=submitter&noUDP&sock=schedd_4045053_7bc0>
+...
+009 (328425.000.000) 2025-02-09 16:36:25 Job was aborted.
+	via condor_rm (by user stingaci_2047145)
+...
+001 (328404.000.000) 2025-02-09 16:38:33 Job executing on host: <192.168.0.110:9618?addrs=192.168.0.110-9618&alias=node110.di.rm1&noUDP&sock=startd_2154_0b16>
+...
+006 (328404.000.000) 2025-02-09 16:38:41 Image size of job updated: 40324
+	20  -  MemoryUsage of job (MB)
+	19996  -  ResidentSetSize of job (KB)
+...
+005 (328404.000.000) 2025-02-09 16:38:42 Job terminated.
+	(1) Normal termination (return value 0)
+		Usr 0 00:00:08, Sys 0 00:00:00  -  Run Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Run Local Usage
+		Usr 0 00:00:08, Sys 0 00:00:00  -  Total Remote Usage
+		Usr 0 00:00:00, Sys 0 00:00:00  -  Total Local Usage
+	0  -  Run Bytes Sent By Job
+	0  -  Run Bytes Received By Job
+	0  -  Total Bytes Sent By Job
+	0  -  Total Bytes Received By Job
+	Partitionable Resources :    Usage  Request Allocated Assigned
+	   Cpus                 :                64        64 
+	   Disk (KB)            :      750      750    468076 
+	   Gpus (Average)       :                 1         1 "GPU-3ad8f19c"
+	   Memory (MB)          :       20        1       128 
+
+	Job terminated of its own accord at 2025-02-09T16:38:42Z with exit-code 0.
+...
