@@ -1,49 +1,71 @@
 #!/bin/bash
+#
+# Script per eseguire 50 volte il programma MPI per 6 input file diversi
+# e per thread (processi MPI) pari a 2^0, 2^1, 2^2, 2^3.
+#
+# La struttura del comando eseguito è:
+# mpirun -np <num_processi> ./KMEANS_mpi test_files/<input_file> 1000 3 50 0.01 <output_file>
+#
+# L’output (stdout e stderr) di ogni run viene salvato in un file log numerato,
+# all’interno di una cartella la cui denominazione dipende dall’input file e dal numero di processi.
+#
 
+# Array dei file di input (modifica i nomi secondo le tue necessità)
+input_files=("input2D3.inp" "input4D.inp" "input8D.inp" "input16D.inp" "input32D.inp" "input64D.inp")
 
+# Parametri costanti da passare all'eseguibile (modifica se necessario)
+param1=128
+param2=1000
+param3=1
+param4=1
 
-# Creazione di una lista di stringhe
-string_list=("stringa1" "stringa2" "stringa3")
-# Accesso al primo elemento della lista
-primo_elemento=${string_list[0]}
-echo "Il primo elemento della lista è: $primo_elemento"
+for exp2 in {1..2}; do
+# Ciclo sui thread/processi MPI: 2^0, 2^1, 2^2, 2^3
+        
+    num_processi=$((2**exp2))
+    
 
-listaFile=("input2D3.inp" "input4D.inp" "input8D.inp" "input16D.inp")
+    for exp in {0..2}; do
 
-# Verifica che siano stati passati dei parametri
-if [ "$#" -eq 0 ]; then
-    echo "Utilizzo: $0 <parametri_eseguibile>"
-    exit 1
-fi
+        export OMP_NUM_THREADS=$((2**exp))
+        echo "Numero di thread impostato a: $OMP_NUM_THREADS"
 
-for k in $(seq 0 3); do
-
-    # Imposta il numero di thread come potenza di 2 di k
-    export OMP_NUM_THREADS=$((2**k))
-    echo "Numero di thread impostato a: $OMP_NUM_THREADS"
-
-    for j in $(seq 1 4); do
-
-        # Costruisco il nome della cartella a partire dai parametri, sostituendo eventuali spazi con underscore
-        FOLDER=$(echo "log/OMP/${listaFile[j-1]}_$@_$OMP_NUM_THREADS" | tr ' ' '_')
-        mkdir -p "$FOLDER"
-
-        # Specifica il percorso dell'eseguibile (modifica se necessario)
-        EXECUTABLE="mpirun -np ./KMEANS_omp" # TODO: capire quandi nodi e quanti thread
-
-        # Esecuzione dell'eseguibile 100 volte
-        for i in $(seq 1 50); do
-            # Costruisco il nome del file di log con numerazione a 3 cifre
-            LOGFILE="${FOLDER}/run_$(printf '%03d' "$i").log"
+        
+        # Per ogni input file
+        for input in "${input_files[@]}"; do
+            # Il file di input è nella cartella test_files/
+            input_path="test_files/${input}"
             
-            echo "Esecuzione numero $i con parametri: test_files/${listaFile[j-1]} $@ $OMP_NUM_THREADS" | tee "$LOGFILE"
+            # Genera un nome per l'output sostituendo "input" con "output"
+            # (modifica la logica se necessario)
+            output=$(echo "$input" | sed 's/input/output/')
             
-            # Esegue l'eseguibile con gli stessi parametri passati allo script e redirige stdout e stderr
-            "$EXECUTABLE" "test_files/${listaFile[j-1]}" "$@" >> "$LOGFILE" 2>&1
+            # Costruisce la cartella di log in base all’input file e al numero di processi
+            # (ad esempio: logs/input100D2_np1)
+            log_folder="logs/${input%.*}_np${num_processi}_exp${exp}"
+            mkdir -p "$log_folder"
             
-            echo "------------------------" >> "$LOGFILE"
+            echo "------------------------------------------------------------"
+            echo "Esecuzione per file: ${input} con np=${num_processi}" e thread $OMP_NUM_THREADS
+            echo "I log saranno salvati in: ${log_folder}"
+            echo "------------------------------------------------------------"
+            
+            # Esegue 50 volte il comando
+            for run in $(seq 1 50); do
+                # Nome del file di log (numero formattato con 3 cifre, ad esempio run_001.log)
+                logfile="${log_folder}/run_$(printf '%03d' "$run").log"
+                
+                # Costruisce la stringa del comando
+                cmd="mpirun -np ${num_processi} ./KMEANS_mpi_omp ${input_path} ${param1} ${param2} ${param3} ${param4} ${output}"
+                
+                # Stampa il comando e lo salva nel logfile
+                echo "Esecuzione n. ${run}: ${cmd}" | tee "$logfile"
+                
+                # Esegue il comando, salvando stdout e stderr nel log
+                ${cmd} >> "$logfile" 2>&1
+                
+                echo "----------------------------------------" >> "$logfile"
+            done
         done
     done
 done
-
-echo "Esecuzioni completate. I file di log sono stati salvati in: $FOLDER"

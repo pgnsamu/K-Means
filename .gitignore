@@ -4,3 +4,8 @@ debugfiles
 tmp
 Makefile
 output*.inp
+job
+logs
+logs2
+omp
+seq
