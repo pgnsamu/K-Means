@@ -1,0 +1,20 @@
+universe              = parallel
+executable            = openmpiscript
+# Passa come argomenti prima il tuo eseguibile e poi i parametri che deve ricevere.
+arguments             = ./KMEANS_mpi test_files/$(TestFile).inp 128 1000 1 1 mpi/$(TestFile)_$(Cpus)/output_$(Process).txt
+
+getenv                = true
+
+should_transfer_files = yes
+transfer_input_files  = openmpiscript, KMEANS_mpi, test_files/$(TestFile).inp
+
+# File di log, output ed error (usa le variabili per differenziare i job, ad es. in job array)
+log                   = mpi/$(TestFile)_$(Cpus)/logs/run.log
+output                = mpi/$(TestFile)_$(Cpus)/logs/run_$(Process)_$(NODE).out
+error                 = mpi/$(TestFile)_$(Cpus)/logs/run_$(Process)_$(NODE).err
+
+# Numero di processi MPI da richiedere, ad esempio 16
+machine_count         = $(Cpus)
+
+# In caso di array di job, ad esempio 100 repliche:
+queue Process from 1 to 100
