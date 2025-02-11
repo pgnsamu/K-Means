@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
 		fprintf(stderr,"Number of points must be divisible by the number of processes\n");
 		MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
 	}
-	int centroidPerProcess = K / size;		// Numero di centroidi per processo
+
 	int linesPerProcess = lines / size;		// Numero di righe per processo
 
 	// Allocazioni per dati locali MPI
