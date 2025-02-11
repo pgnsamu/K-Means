@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 
 		// 1. Assegnamento: per ogni punto calcola la distanza euclidea da ognuno dei centroidi
 		changes = 0; 	
-		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) 
+		#pragma omp parallel for private(i,class,minDist) shared(classMap,changes) schedule(dynamic)
 		for(i=0; i<lines; i++){
 			class = 1;          // Valore predefinito per il cluster
 			minDist = FLT_MAX;  // Inizializza con il massimo valore possibile
